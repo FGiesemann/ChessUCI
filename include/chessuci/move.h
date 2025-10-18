@@ -74,7 +74,7 @@ auto uci_move_matches(const UCIMove &uci_move, const chesscore::Move &move) -> b
  * \param moves The move list.
  * \return List of all matching moves.
  */
-auto match_move(const UCIMove &move, chesscore::MoveList &moves) -> chesscore::MoveList;
+auto match_move(const UCIMove &move, const chesscore::MoveList &moves) -> chesscore::MoveList;
 
 } // namespace chessuci
 
