@@ -58,7 +58,7 @@ auto uci_move_matches(const UCIMove &uci_move, const chesscore::Move &move) -> b
            ((move.promoted.has_value() && move.promoted.value().type == uci_move.promotion_piece) || (!move.promoted.has_value() && !uci_move.promotion_piece.has_value()));
 }
 
-auto match_move(const UCIMove &move, chesscore::MoveList &moves) -> chesscore::MoveList {
+auto match_move(const UCIMove &move, const chesscore::MoveList &moves) -> chesscore::MoveList {
     return moves | std::views::filter([&move](const chesscore::Move &candidate) { return uci_move_matches(move, candidate); }) | std::ranges::to<chesscore::MoveList>();
 }
 
