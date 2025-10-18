@@ -89,5 +89,5 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION share/doc/${PROJEC
 if (NOT BUILD_TESTING STREQUAL OFF)
     enable_testing()
     find_package(Catch2 3 REQUIRED)
-    # add_subdirectory(test)
+    add_subdirectory(test)
 endif()
