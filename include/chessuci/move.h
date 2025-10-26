@@ -27,6 +27,15 @@ struct UCIMove {
 };
 
 /**
+ * \brief Convert a UCIMove to a string.
+ *
+ * The string is in long algebraic notation, as used in the UCI protocol.
+ * \param move The move to convert.
+ * \return The move in long algebraic notation.
+ */
+auto to_string(const UCIMove &move) -> std::string;
+
+/**
  * \brief Error conditions while parsing an UCI move.
  */
 enum class UCIParserErrorType {
