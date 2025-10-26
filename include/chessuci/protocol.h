@@ -1,0 +1,100 @@
+/* ************************************************************************** *
+ * Chess UCI                                                                  *
+ * Universal Chess Interface for Chess Engines                                *
+ * ************************************************************************** */
+
+#ifndef CHESSUCI_PROTOCOL_H
+#define CHESSUCI_PROTOCOL_H
+
+#include <optional>
+#include <vector>
+
+#include "chessuci/move.h"
+
+namespace chessuci {
+
+struct debug_command {
+    bool enable_debugging;
+};
+
+struct setoption_command {
+    std::string name;
+    std::optional<std::string> value; // not set is not the same as empty string
+};
+
+struct position_command {
+    std::string fen; // Could also be 'startpos'
+    std::vector<UCIMove> moves;
+};
+
+struct go_command {
+    std::vector<UCIMove> searchmoves;
+    bool ponder = false;
+    std::optional<int> wtime;
+    std::optional<int> btime;
+    std::optional<int> winc;
+    std::optional<int> binc;
+    std::optional<int> movestogo;
+    std::optional<int> depth;
+    std::optional<int> nodes;
+    std::optional<int> mate;
+    std::optional<int> movetime;
+    bool infinite = false;
+};
+
+struct id_info {
+    std::string name;
+    std::string author;
+};
+
+struct bestmove_info {
+    UCIMove bestmove;
+    std::optional<UCIMove> pondermove;
+};
+
+struct score_info {
+    std::optional<int> cp;
+    std::optional<int> mate;
+    std::optional<int> lowerbound;
+    std::optional<int> upperbound;
+};
+
+struct line_info {
+    std::optional<int> cpunr;
+    std::vector<UCIMove> line;
+};
+
+struct search_info {
+    std::optional<int> depth;
+    std::optional<int> seldepth;
+    std::optional<int> time;
+    std::optional<int> nodes;
+    std::vector<UCIMove> pv;
+    std::optional<int> multipv;
+    std::optional<score_info> score;
+    std::optional<UCIMove> currmove;
+    std::optional<int> currmovenumber;
+    std::optional<int> hashfull;
+    std::optional<int> nps;
+    std::optional<int> tbhits;
+    std::optional<int> sbhits;
+    std::optional<int> cpuload;
+    std::string string;
+    std::vector<UCIMove> refutation;
+    std::optional<line_info> currline;
+};
+
+struct Option {
+    enum class Type { Check, Spin, Combo, Button, String };
+
+    std::string name;
+    Type type;
+    std::optional<std::string> default_value;
+    std::optional<int> min;
+    std::optional<int> max;
+    std::vector<std::string> combo_values;
+};
+
+} // namespace chessuci
+
+#endif
