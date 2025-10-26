@@ -26,6 +26,15 @@ auto is_valid_promotion_piece(char piece) -> bool {
 }
 } // namespace
 
+auto to_string(const UCIMove &move) -> std::string {
+    std::string result{to_string(move.from)};
+    result += to_string(move.to);
+    if (move.promotion_piece.has_value()) {
+        result += chesscore::Piece{.type = move.promotion_piece.value(), .color = chesscore::Color::Black}.piece_char();
+    }
+    return result;
+}
+
 auto parse_uci_move(const std::string &uci_str) -> std::expected<UCIMove, UCIParserError> {
     if (uci_str.length() < min_uci_move_length) {
         return std::unexpected{UCIParserError{.type = UCIParserErrorType::MissingData, .uci_str = uci_str}};

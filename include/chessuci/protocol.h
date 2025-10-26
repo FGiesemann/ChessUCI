@@ -7,11 +7,16 @@
 #define CHESSUCI_PROTOCOL_H
 
 #include <optional>
+#include <stdexcept>
 #include <vector>
 
 #include "chessuci/move.h"
 
 namespace chessuci {
+
+class UCIError : public std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
 
 struct debug_command {
     bool enable_debugging;
@@ -93,6 +98,9 @@ struct Option {
     std::optional<int> min;
     std::optional<int> max;
     std::vector<std::string> combo_values;
+
+    auto to_uci_string() const -> std::string;
+    auto type_to_string() const -> std::string;
 };
 
 } // namespace chessuci

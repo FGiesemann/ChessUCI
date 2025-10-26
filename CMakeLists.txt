@@ -10,6 +10,7 @@ option(BUILD_TESTING "Build unittests" ON)
 include(cmake/compiler_warnings.cmake)
 
 add_library(${PROJECT_NAME}
+    src/engine_handler.cpp
     src/move.cpp
     src/protocol.cpp
 )
