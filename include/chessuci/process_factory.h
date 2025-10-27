@@ -14,7 +14,7 @@ namespace chessuci {
 
 class ProcessFactory {
 public:
-    static auto create(const ProcessParams &params) -> std::unique_ptr<EngineProcess>;
+    static auto create_local() -> std::unique_ptr<EngineProcess>;
 };
 
 } // namespace chessuci
