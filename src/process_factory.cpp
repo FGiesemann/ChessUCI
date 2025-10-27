@@ -17,8 +17,8 @@ using LocalEngineProcess = chessuci::EngineProcessUnix;
 
 namespace chessuci {
 
-auto ProcessFactory::create(const ProcessParams &params) -> std::unique_ptr<EngineProcess> {
-    return std::make_unique<LocalEngineProcess>(params);
+auto ProcessFactory::create_local() -> std::unique_ptr<EngineProcess> {
+    return std::make_unique<LocalEngineProcess>();
 }
 
 } // namespace chessuci
