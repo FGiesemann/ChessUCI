@@ -13,8 +13,21 @@ add_library(${PROJECT_NAME}
     src/engine_handler.cpp
     src/engine_process.cpp
     src/move.cpp
+    src/process_factory.cpp
     src/protocol.cpp
 )
+if(WIN32)
+    target_sources(${PROJECT_NAME} PRIVATE src/engine_process_win.cpp)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE CHESSUCI_WINDOWS)
+elseif(APPLE)
+    target_sources(${PROJECT_NAME} PRIVATE src/engine_process_unix.cpp)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE CHESSUCI_MACOS CHESSUCI_UNIX)
+elseif(UNIX)
+    target_sources(${PROJECT_NAME} PRIVATE src/engine_process_unix.cpp)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE CHESSUCI_LINUX CHESSUCI_UNIX)
+else()
+    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
+endif()
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
