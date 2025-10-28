@@ -8,6 +8,8 @@
 
 #include "chessuci/engine_process.h"
 
+#include <windows.h>
+
 namespace chessuci {
 
 class EngineProcessWin : public EngineProcess {
@@ -41,6 +43,24 @@ public:
 
     /** \copydoc EngineProcess::last_error */
     auto last_error() const -> const std::string & override;
+private:
+    struct Pipe {
+        HANDLE read{INVALID_HANDLE_VALUE};
+        HANDLE write{INVALID_HANDLE_VALUE};
+
+        ~Pipe();
+    };
+    Pipe m_std_out{};
+    Pipe m_std_in{};
+    HANDLE m_process_handle{INVALID_HANDLE_VALUE};
+    proc_id_t m_process_id{};
+
+    mutable std::string m_last_error{};
+
+    auto create_pipes() -> bool;
+    auto create_child_process(const ProcessParams &params) -> void;
+    static auto build_command_line(const ProcessParams &params) -> std::wstring;
+    static auto format_windows_error(DWORD error_code) -> std::string;
 };
 
 } // namespace chessuci

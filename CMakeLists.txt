@@ -18,7 +18,14 @@ add_library(${PROJECT_NAME}
 )
 if(WIN32)
     target_sources(${PROJECT_NAME} PRIVATE src/engine_process_win.cpp)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE CHESSUCI_WINDOWS)
+    target_compile_definitions(${PROJECT_NAME}
+        PRIVATE
+            CHESSUCI_WINDOWS
+            UNICODE
+            _UNICODE
+            WIN32_LEAN_AND_MEAN
+            NOMINMAX
+    )    
 elseif(APPLE)
     target_sources(${PROJECT_NAME} PRIVATE src/engine_process_unix.cpp)
     target_compile_definitions(${PROJECT_NAME} PRIVATE CHESSUCI_MACOS CHESSUCI_UNIX)
