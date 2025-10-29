@@ -42,19 +42,62 @@ auto wide_to_utf8(const std::wstring &wide) -> std::string {
 
 } // namespace
 
-auto EngineProcessWin::start(const ProcessParams &params) -> void {
-    if (!create_pipes()) {
-        return;
+EngineProcessWin::~EngineProcessWin() {
+    if (is_running()) {
+        terminate(1000);
+        if (is_running()) {
+            kill();
+        }
     }
-    create_child_process(params);
+    close_handles();
+}
+
+auto EngineProcessWin::start(const ProcessParams &params) -> bool {
+    if (is_running()) {
+        set_error("Process already running");
+        return false;
+    }
+
+    if (!create_pipes()) {
+        return false;
+    }
+
+    if (!create_child_process(params)) {
+        close_handles();
+        return false;
+    }
+
+    m_running = true;
+
+    DWORD exit_code{};
+    if (GetExitCodeProcess(m_process_handle, &exit_code) == TRUE) {
+        if (exit_code != STILL_ACTIVE) {
+            m_running = false;
+            set_error("Process exited immediately with code " + std::to_string(exit_code));
+            close_handles();
+            return false;
+        }
+    }
+
+    return true;
 }
 
 auto EngineProcessWin::is_running() const -> bool {
-    if (m_process_handle == INVALID_HANDLE_VALUE) {
+    if (!m_running || m_process_handle == INVALID_HANDLE_VALUE) {
         return false;
     }
+
     DWORD result = WaitForSingleObject(m_process_handle, 0);
-    return result == WAIT_TIMEOUT;
+    switch (result) {
+    case WAIT_TIMEOUT:
+        return true;
+    case WAIT_OBJECT_0:
+        [[fallthrough]];
+    case WAIT_FAILED:
+    default:
+        m_running = false;
+        return false;
+    }
 }
 
 auto EngineProcessWin::pid() const -> proc_id_t {
@@ -62,26 +105,154 @@ auto EngineProcessWin::pid() const -> proc_id_t {
 }
 
 auto EngineProcessWin::terminate(int timeout_ms) -> bool {
-    if (m_process_handle == INVALID_HANDLE_VALUE) {
+    if (!is_running()) {
         return false;
     }
 
     write_line("quit");
-    DWORD wait_result = WaitForSingleObject(m_process_handle, static_cast<DWORD>(timeout_ms));
-    if (wait_result == WAIT_OBJECT_0) {
+    if (wait_for_exit(timeout_ms).has_value()) {
+        m_running = false;
+        close_handles();
         return true;
+    }
+
+    kill();
+    return false;
+}
+
+auto EngineProcessWin::kill() -> void {
+    if (!is_running() || m_process_handle == INVALID_HANDLE_VALUE) {
+        return;
+    }
+
+    if (TerminateProcess(m_process_handle, 1) == FALSE) {
+        m_running = false;
+        close_handles();
+        return;
+    }
+
+    DWORD result = WaitForSingleObject(m_process_handle, terminate_timeout);
+    if (result == WAIT_TIMEOUT) {
+        set_error("Process didn't terminate");
+    }
+
+    m_running = false;
+    close_handles();
+}
+
+auto EngineProcessWin::wait_for_exit(int timeout_ms) -> std::optional<int> {
+    if (!is_running()) {
+        return std::nullopt;
+    }
+
+    DWORD exit_code{};
+    if (wait_for_process(timeout_ms, exit_code)) {
+        m_running = false;
+        close_handles();
+        return static_cast<int>(exit_code);
+    }
+
+    return std::nullopt;
+}
+
+auto EngineProcessWin::wait_for_process(DWORD timeout_ms, DWORD &exit_code) const -> bool {
+    DWORD wait_time = timeout_ms;
+
+    if (timeout_ms == 0) {
+        wait_time = 0;
+    }
+
+    DWORD result = WaitForSingleObject(m_process_handle, wait_time);
+    if (result == WAIT_OBJECT_0) {
+        GetExitCodeProcess(m_process_handle, &exit_code);
+        return true;
+    }
+
+    return false;
+}
+
+auto EngineProcessWin::write_line(const std::string &line) -> bool {
+    if (!is_running()) {
+        set_error("Process not running");
+        return false;
+    }
+
+    std::string message = line + "\n";
+    auto bytes_to_write = static_cast<DWORD>(message.size());
+    DWORD bytes_written{0};
+    bool success = WriteFile(m_std_in.write(), message.c_str(), bytes_to_write, &bytes_written, nullptr) == TRUE;
+    if (!success || bytes_written != bytes_to_write) {
+        set_error("WriteFile failed: " + format_windows_error(GetLastError()));
+        return false;
+    }
+    FlushFileBuffers(m_std_in.write());
+
+    return true;
+}
+
+auto EngineProcessWin::read_line(std::string &line) -> bool {
+    if (!is_running()) {
+        set_error("Process not running");
+        return false;
+    }
+
+    size_t newline_pos = m_read_buffer.find('\n');
+    if (newline_pos != std::string::npos) {
+        line = m_read_buffer.substr(0, newline_pos);
+        m_read_buffer.erase(0, newline_pos + 1);
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        return true;
+    }
+
+    char buffer[4096];
+    while (true) {
+        DWORD bytes_read = 0;
+        bool success = ReadFile(m_std_out.read(), buffer, sizeof(buffer), &bytes_read, nullptr) == TRUE;
+
+        if (success && bytes_read > 0) {
+            m_read_buffer.append(buffer, bytes_read);
+            newline_pos = m_read_buffer.find('\n');
+            if (newline_pos != std::string::npos) {
+                line = m_read_buffer.substr(0, newline_pos);
+                m_read_buffer.erase(0, newline_pos + 1);
+
+                if (!line.empty() && line.back() == '\r') {
+                    line.pop_back();
+                }
+
+                return true;
+            }
+        } else if (bytes_read == 0) {
+            DWORD error = GetLastError();
+            if (error == ERROR_BROKEN_PIPE) {
+                set_error("Process closed stdout (broken pipe)");
+            } else {
+                set_error("ReadFile failed: " + format_windows_error(error));
+            }
+            return false;
+
+        } else {
+            set_error("ReadFile failed: " + format_windows_error(GetLastError()));
+            return false;
+        }
     }
 }
 
-auto EngineProcessWin::kill() -> void {}
+auto EngineProcessWin::can_read() const -> bool {
+    if (!is_running()) {
+        return false;
+    }
 
-auto EngineProcessWin::wait_for_exit(int timeout_ms) -> std::optional<int> {}
+    if (m_read_buffer.find('\n') != std::string::npos) {
+        return true;
+    }
+    DWORD bytes_available{};
+    bool success = PeekNamedPipe(m_std_out.read(), nullptr, 0, nullptr, &bytes_available, nullptr) == TRUE;
 
-auto EngineProcessWin::write_line(const std::string &line) -> bool {}
-
-auto EngineProcessWin::read_line(std::string &line) -> bool {}
-
-auto EngineProcessWin::can_read() const -> bool {}
+    return success && bytes_available > 0;
+}
 
 auto EngineProcessWin::last_error() const -> const std::string & {
     return m_last_error;
@@ -89,36 +260,31 @@ auto EngineProcessWin::last_error() const -> const std::string & {
 
 auto EngineProcessWin::create_pipes() -> bool {
     SECURITY_ATTRIBUTES saAttr{.nLength = sizeof(SECURITY_ATTRIBUTES), .lpSecurityDescriptor = nullptr, .bInheritHandle = TRUE};
-    if (CreatePipe(&m_std_out.read, &m_std_out.write, &saAttr, 0) == FALSE) {
-        m_last_error = "Could not create stdout pipe";
+    if (!m_std_in.create(&saAttr, true, false)) {
+        set_error("Failed to create stdin pipe: " + format_windows_error(GetLastError()));
         return false;
     }
-    if (SetHandleInformation(m_std_out.read, HANDLE_FLAG_INHERIT, 0) == FALSE) {
-        m_last_error = "Could not set stdout handle inheritance";
+    if (!m_std_out.create(&saAttr, false, true)) {
+        set_error("Failed to create stdout pipe: " + format_windows_error(GetLastError()));
         return false;
     }
-
-    if (CreatePipe(&m_std_in.read, &m_std_in.write, &saAttr, 0) == FALSE) {
-        m_last_error = "Could not create stdin pipe";
-        return false;
-    }
-    if (SetHandleInformation(m_std_in.write, HANDLE_FLAG_INHERIT, 0) == FALSE) {
-        m_last_error = "Could not set stdin handle inheritance";
+    if (!m_std_err.create(&saAttr, false, true)) {
+        set_error("Failed to create stderr pipe: " + format_windows_error(GetLastError()));
         return false;
     }
     return true;
 }
 
-auto EngineProcessWin::create_child_process(const ProcessParams &params) -> void {
+auto EngineProcessWin::create_child_process(const ProcessParams &params) -> bool {
     std::wstring command_line = build_command_line(params);
 
     STARTUPINFOW start_info;
     ZeroMemory(&start_info, sizeof(start_info));
     start_info.cb = sizeof(STARTUPINFOW);
-    start_info.hStdError = m_std_out.write;
-    start_info.hStdOutput = m_std_out.write;
-    start_info.hStdInput = m_std_in.read;
-    start_info.dwFlags |= STARTF_USESTDHANDLES;
+    start_info.hStdError = m_std_err.write();
+    start_info.hStdOutput = m_std_out.write();
+    start_info.hStdInput = m_std_in.read();
+    start_info.dwFlags = STARTF_USESTDHANDLES;
 
     const wchar_t *working_dir = nullptr;
     std::wstring working_dir_str;
@@ -133,23 +299,18 @@ auto EngineProcessWin::create_child_process(const ProcessParams &params) -> void
     if (success == FALSE) {
         DWORD error = GetLastError();
         m_last_error = "Error creating process: " + format_windows_error(error);
-        return;
+        return false;
     }
 
-    CloseHandle(m_std_out.write);
-    m_std_out.write = INVALID_HANDLE_VALUE;
-    CloseHandle(m_std_in.read);
-    m_std_in.read = INVALID_HANDLE_VALUE;
+    m_std_err.close_write();
+    m_std_out.close_write();
+    m_std_in.close_read();
 
     m_process_handle = process_info.hProcess;
-    m_process_id = process_info.dwProcessId;
-
-    DWORD wait_result = WaitForInputIdle(m_process_handle, 1000);
-    if (wait_result == WAIT_FAILED) {
-        m_last_error = "Error waiting for engine process to become idle";
-    }
+    m_process_id = static_cast<proc_id_t>(process_info.dwProcessId);
 
     CloseHandle(process_info.hThread);
+    return true;
 }
 
 auto EngineProcessWin::build_command_line(const ProcessParams &params) -> std::wstring {
@@ -179,15 +340,22 @@ auto EngineProcessWin::format_windows_error(DWORD error_code) -> std::string {
     return result;
 }
 
+auto EngineProcessWin::Pipe::create(SECURITY_ATTRIBUTES *attributes, bool inherit_read, bool inherit_write) -> bool {
+    if (CreatePipe(&m_read, &m_write, attributes, 0) == FALSE) {
+        return false;
+    }
+    if (!inherit_read) {
+        SetHandleInformation(m_read, HANDLE_FLAG_INHERIT, 0);
+    }
+    if (!inherit_write) {
+        SetHandleInformation(m_write, HANDLE_FLAG_INHERIT, 0);
+    }
+    return true;
+}
+
 EngineProcessWin::Pipe::~Pipe() {
-    if (read != INVALID_HANDLE_VALUE) {
-        CloseHandle(read);
-        read = INVALID_HANDLE_VALUE;
-    }
-    if (write != INVALID_HANDLE_VALUE) {
-        CloseHandle(write);
-        write = INVALID_HANDLE_VALUE;
-    }
+    close_read();
+    close_write();
 }
 
 } // namespace chessuci
