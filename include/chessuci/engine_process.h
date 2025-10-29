@@ -36,8 +36,10 @@ public:
      * already running, nothing happens. In order to restart an engine process,
      * call terminate() first.
      * \param params Paramters for the process.
+     * \return `true`, if the process was started successfully; `false`, if it
+     *   could not be started.
      */
-    virtual auto start(const ProcessParams &params) -> void = 0;
+    virtual auto start(const ProcessParams &params) -> bool = 0;
 
     /**
      * \brief Check if the process is running.
