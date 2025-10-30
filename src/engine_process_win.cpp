@@ -8,9 +8,7 @@
 
 namespace chessuci {
 
-namespace {
-
-auto utf8_to_wide(const std::string &utf8) -> std::wstring {
+auto EngineProcessWin::utf8_to_wide(const std::string &utf8) -> std::wstring {
     if (utf8.empty()) {
         return {};
     }
@@ -25,7 +23,7 @@ auto utf8_to_wide(const std::string &utf8) -> std::wstring {
     return result;
 }
 
-auto wide_to_utf8(const std::wstring &wide) -> std::string {
+auto EngineProcessWin::wide_to_utf8(const std::wstring &wide) -> std::string {
     if (wide.empty()) {
         return {};
     }
@@ -39,8 +37,6 @@ auto wide_to_utf8(const std::wstring &wide) -> std::string {
 
     return result;
 }
-
-} // namespace
 
 EngineProcessWin::~EngineProcessWin() {
     if (is_running()) {

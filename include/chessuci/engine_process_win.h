@@ -46,6 +46,9 @@ public:
 
     /** \copydoc EngineProcess::last_error */
     auto last_error() const -> const std::string & override;
+
+    static auto utf8_to_wide(const std::string &utf8) -> std::wstring;
+    static auto wide_to_utf8(const std::wstring &wide) -> std::string;
 private:
     static constexpr DWORD terminate_timeout{5000};
 
