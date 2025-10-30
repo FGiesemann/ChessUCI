@@ -7,6 +7,10 @@ function(add_test_binary TARGET_NAME SOURCE_FILE)
         RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}/test_binaries
         RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}/test_binaries
     )
+    target_compile_options(${TARGET_NAME}
+        PRIVATE
+            "$<$<CXX_COMPILER_ID:MSVC>:/utf-8>"
+    )
 endfunction()
 
 # "Engine Simulations"
@@ -34,6 +38,10 @@ target_link_libraries(chessuci_processhandling_tests
 )
 target_compile_definitions(chessuci_processhandling_tests PRIVATE
     TEST_BINARY_DIR="${CMAKE_CURRENT_BINARY_DIR}/test_binaries"
+)
+target_compile_options(chessuci_processhandling_tests
+    PRIVATE
+        "$<$<CXX_COMPILER_ID:MSVC>:/utf-8>"
 )
 
 add_dependencies(chessuci_processhandling_tests

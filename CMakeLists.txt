@@ -25,7 +25,8 @@ if(WIN32)
             _UNICODE
             WIN32_LEAN_AND_MEAN
             NOMINMAX
-    )    
+    )
+    target_compile_options(${PROJECT_NAME} PRIVATE "/utf-8")
 elseif(APPLE)
     target_sources(${PROJECT_NAME} PRIVATE src/engine_process_unix.cpp)
     target_compile_definitions(${PROJECT_NAME} PRIVATE CHESSUCI_MACOS CHESSUCI_UNIX)
