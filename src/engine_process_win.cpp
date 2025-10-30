@@ -141,10 +141,6 @@ auto EngineProcessWin::kill() -> void {
 }
 
 auto EngineProcessWin::wait_for_exit(int timeout_ms) -> std::optional<int> {
-    if (!is_running()) {
-        return std::nullopt;
-    }
-
     DWORD exit_code{};
     if (wait_for_process(timeout_ms, exit_code)) {
         m_running = false;
