@@ -49,6 +49,13 @@ public:
 private:
     static constexpr DWORD terminate_timeout{5000};
 
+    static auto close_handle(HANDLE *handle) -> void {
+        if (*handle != INVALID_HANDLE_VALUE) {
+            CloseHandle(*handle);
+            *handle = INVALID_HANDLE_VALUE;
+        }
+    }
+
     class Pipe {
     public:
         ~Pipe();
@@ -65,13 +72,6 @@ private:
     private:
         HANDLE m_read{INVALID_HANDLE_VALUE};
         HANDLE m_write{INVALID_HANDLE_VALUE};
-
-        auto close_handle(HANDLE *handle) -> void {
-            if (*handle != INVALID_HANDLE_VALUE) {
-                CloseHandle(*handle);
-                *handle = INVALID_HANDLE_VALUE;
-            }
-        }
     };
     Pipe m_std_in{};
     Pipe m_std_out{};
