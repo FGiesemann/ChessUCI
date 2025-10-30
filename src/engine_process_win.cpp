@@ -313,6 +313,10 @@ auto EngineProcessWin::create_child_process(const ProcessParams &params) -> bool
     return true;
 }
 
+auto EngineProcessWin::close_handles() -> void {
+    close_handle(&m_process_handle);
+}
+
 auto EngineProcessWin::build_command_line(const ProcessParams &params) -> std::wstring {
     std::wstring cmd = params.executable.wstring();
     if (cmd.find(L' ') != std::wstring::npos || cmd.find(L'\t') != std::wstring::npos) {
