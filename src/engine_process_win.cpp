@@ -102,17 +102,23 @@ auto EngineProcessWin::pid() const -> proc_id_t {
 
 auto EngineProcessWin::terminate(int timeout_ms) -> bool {
     if (!is_running()) {
-        return false;
+        return true;
     }
 
     write_line("quit");
-    if (wait_for_exit(timeout_ms).has_value()) {
+    DWORD exit_code{};
+    if (wait_for_process(timeout_ms, exit_code)) {
         m_running = false;
         close_handles();
         return true;
     }
 
-    kill();
+    if (TerminateProcess(m_process_handle, 1) == TRUE) {
+        wait_for_process(timeout_ms, exit_code);
+        m_running = false;
+        close_handles();
+        return true;
+    }
     return false;
 }
 
@@ -137,6 +143,10 @@ auto EngineProcessWin::kill() -> void {
 }
 
 auto EngineProcessWin::wait_for_exit(int timeout_ms) -> std::optional<int> {
+    if (m_process_handle == INVALID_HANDLE_VALUE) {
+        return std::nullopt;
+    }
+
     DWORD exit_code{};
     if (wait_for_process(timeout_ms, exit_code)) {
         m_running = false;
@@ -148,13 +158,7 @@ auto EngineProcessWin::wait_for_exit(int timeout_ms) -> std::optional<int> {
 }
 
 auto EngineProcessWin::wait_for_process(DWORD timeout_ms, DWORD &exit_code) const -> bool {
-    DWORD wait_time = timeout_ms;
-
-    if (timeout_ms == 0) {
-        wait_time = 0;
-    }
-
-    DWORD result = WaitForSingleObject(m_process_handle, wait_time);
+    DWORD result = WaitForSingleObject(m_process_handle, timeout_ms);
     if (result == WAIT_OBJECT_0) {
         GetExitCodeProcess(m_process_handle, &exit_code);
         return true;
