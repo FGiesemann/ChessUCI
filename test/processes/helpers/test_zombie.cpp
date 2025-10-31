@@ -3,11 +3,11 @@
 #include <signal.h>
 #include <unistd.h>
 
-void signal_handler(int signal) {
+auto signal_handler(int signal) -> void {
     std::cout << "Received signal " << signal << ", ignoring..." << std::endl;
 }
 
-int main() {
+auto main() -> int {
     signal(SIGTERM, signal_handler);
 
     std::cout << "Zombie process started, ignoring SIGTERM" << std::endl;
@@ -19,7 +19,7 @@ int main() {
     return 0;
 }
 #else
-int main() {
+auto main() -> int {
     return 0;
 }
 #endif

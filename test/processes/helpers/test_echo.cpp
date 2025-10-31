@@ -1,6 +1,6 @@
 #include <iostream>
 
-int main(int argc, char *argv[]) {
+auto main(int argc, char *argv[]) -> int {
     for (int i = 1; i < argc; ++i) {
         std::cout << argv[i];
         if (i < argc - 1) {

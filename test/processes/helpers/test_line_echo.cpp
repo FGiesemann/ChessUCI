@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-int main() {
+auto main() -> int {
     std::string line;
     while (std::getline(std::cin, line)) {
         if (line == "quit") {

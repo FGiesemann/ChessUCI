@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-int main(int argc, char *argv[]) {
+auto main(int argc, char *argv[]) -> int {
     int lines = 1000;
     if (argc > 1) {
         lines = std::atoi(argv[1]);

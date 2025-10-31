@@ -2,7 +2,7 @@
 #include <iostream>
 #include <thread>
 
-int main(int argc, char *argv[]) {
+auto main(int argc, char *argv[]) -> int {
     int delay_ms = 2000;
     if (argc > 1) {
         delay_ms = std::atoi(argv[1]);

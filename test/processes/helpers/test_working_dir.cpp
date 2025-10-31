@@ -1,7 +1,7 @@
 #include <filesystem>
 #include <iostream>
 
-int main() {
+auto main() -> int {
     try {
         auto cwd = std::filesystem::current_path();
         std::cout << cwd.string() << std::endl;
