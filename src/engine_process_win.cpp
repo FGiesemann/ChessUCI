@@ -187,11 +187,6 @@ auto EngineProcessWin::write_line(const std::string &line) -> bool {
 }
 
 auto EngineProcessWin::read_line(std::string &line) -> bool {
-    if (!is_running()) {
-        set_error("Process not running");
-        return false;
-    }
-
     size_t newline_pos = m_read_buffer.find('\n');
     if (newline_pos != std::string::npos) {
         line = m_read_buffer.substr(0, newline_pos);
@@ -237,16 +232,11 @@ auto EngineProcessWin::read_line(std::string &line) -> bool {
 }
 
 auto EngineProcessWin::can_read() const -> bool {
-    if (!is_running()) {
-        return false;
-    }
-
     if (m_read_buffer.find('\n') != std::string::npos) {
         return true;
     }
     DWORD bytes_available{};
     bool success = PeekNamedPipe(m_std_out.read(), nullptr, 0, nullptr, &bytes_available, nullptr) == TRUE;
-
     return success && bytes_available > 0;
 }
 
