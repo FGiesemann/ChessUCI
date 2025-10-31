@@ -199,9 +199,12 @@ TEST_CASE("ProcessTests.Wait with timeout", "[process][timeout]") {
 
 TEST_CASE("ProcessTests.can_read() detects available data", "[process][io]") {
     auto process = chessuci::ProcessFactory::create_local();
+    auto binary = get_test_binary_path("test_line_echo");
+    REQUIRE(process->start({binary}));
 
-    auto binary = get_test_binary_path("test_echo");
-    REQUIRE(process->start({binary, {"test"}}));
+    REQUIRE_FALSE(process->can_read());
+
+    REQUIRE(process->write_line("test"));
 
     // wait for data
     auto start = std::chrono::steady_clock::now();
@@ -216,4 +219,6 @@ TEST_CASE("ProcessTests.can_read() detects available data", "[process][io]") {
     std::string output;
     REQUIRE(process->read_line(output));
     REQUIRE(output == "test");
+
+    process->terminate();
 }
