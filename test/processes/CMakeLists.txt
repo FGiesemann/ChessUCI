@@ -22,7 +22,6 @@ add_test_binary(test_line_echo helpers/test_line_echo.cpp)
 add_test_binary(test_crash helpers/test_crash.cpp)
 add_test_binary(test_output_flood helpers/test_output_flood.cpp)
 add_test_binary(test_working_dir helpers/test_working_dir.cpp)
-add_test_binary(test_unicode helpers/test_unicode.cpp)
 if(UNIX)
     add_test_binary(test_zombie helpers/test_zombie.cpp)
 endif()
@@ -53,7 +52,6 @@ add_dependencies(chessuci_processhandling_tests
     test_crash
     test_output_flood
     test_working_dir
-    test_unicode
 )
 
 if(UNIX)

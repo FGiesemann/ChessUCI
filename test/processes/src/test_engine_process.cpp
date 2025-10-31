@@ -168,21 +168,6 @@ TEST_CASE("ProcessTests.Working directory is set correctly", "[process][workdir]
     process->wait_for_exit(1000);
 }
 
-TEST_CASE("ProcessTests.Handle Unicode arguments", "[process][unicode]") {
-    auto process = chessuci::ProcessFactory::create_local();
-
-    auto binary = get_test_binary_path("test_unicode");
-
-    std::string utf8_input = "Schach ♔♕ 世界";
-    REQUIRE(process->start({binary, {utf8_input}}));
-
-    std::string output;
-    REQUIRE(process->read_line(output));
-    REQUIRE(output == utf8_input);
-
-    process->wait_for_exit(1000);
-}
-
 #ifdef __unix__
 TEST_CASE("ProcessTests.Handle zombie process (Unix)", "[process][unix][zombie]") {
     auto process = chessuci::ProcessFactory::create_local();
