@@ -337,9 +337,4 @@ auto EngineProcessWin::Pipe::create(SECURITY_ATTRIBUTES *attributes, bool inheri
     return true;
 }
 
-EngineProcessWin::Pipe::~Pipe() {
-    close_read();
-    close_write();
-}
-
 } // namespace chessuci

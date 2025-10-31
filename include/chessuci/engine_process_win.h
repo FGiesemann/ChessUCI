@@ -61,7 +61,10 @@ private:
 
     class Pipe {
     public:
-        ~Pipe();
+        ~Pipe() {
+            close_read();
+            close_write();
+        }
 
         auto create(SECURITY_ATTRIBUTES *attributes, bool inherit_read, bool inherit_write) -> bool;
 
