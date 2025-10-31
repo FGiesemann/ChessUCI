@@ -113,12 +113,6 @@ auto EngineProcessWin::terminate(int timeout_ms) -> bool {
         return true;
     }
 
-    if (TerminateProcess(m_process_handle, 1) == TRUE) {
-        wait_for_process(timeout_ms, exit_code);
-        m_running = false;
-        close_handles();
-        return true;
-    }
     return false;
 }
 
