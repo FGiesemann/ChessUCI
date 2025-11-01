@@ -14,6 +14,9 @@ namespace chessuci {
 
 class EngineProcessUnix : public EngineProcess {
 public:
+    EngineProcessUnix() = default;
+    ~EngineProcessUnix() override;
+
     /** \copydoc EngineProcess::start */
     auto start(const ProcessParams &params) -> bool override;
 
@@ -80,9 +83,12 @@ private:
 
     std::string m_read_buffer;
 
+    auto create_pipes() -> bool;
+    auto create_child_process(const ProcessParams &params) -> bool;
     auto close_pipes() -> void;
     auto set_non_blocking(int fd) -> bool;
     auto wait_for_child(int timeout_ms, int &exit_status) -> bool;
+    auto set_error(const std::string &message) -> void { m_last_error = message; }
 };
 
 } // namespace chessuci
