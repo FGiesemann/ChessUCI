@@ -103,18 +103,16 @@ auto UCIGuiHandler::parse_info_command(const TokenList &tokens) -> search_info {
     search_info info{};
     std::vector<UCIMove> *target_vector{nullptr};
     for (size_t index = 1; index < tokens.size(); ++index) {
-        auto parse_move = [&]() -> UCIMove {
+        auto parse_move_param = [&](std::optional<UCIMove> &target) -> void {
             if (index + 1 < tokens.size()) {
                 const auto move = parse_uci_move(tokens[++index]);
                 if (move.has_value()) {
-                    return move.value();
+                    target = move.value();
                 }
                 throw UCIError{"Invalid move parameter"};
             }
-            throw UCIError{"Missing parameter value"};
+            throw UCIError{"Missing move parameter"};
         };
-
-        auto parse_move_param = [&](std::optional<UCIMove> &target) -> void { target = parse_move(); };
 
         const auto &token = tokens[index];
         if (token == "depth") {
@@ -159,16 +157,25 @@ auto UCIGuiHandler::parse_info_command(const TokenList &tokens) -> search_info {
         } else if (token == "currline") {
             info.currline = line_info{};
             parse_int_param(tokens, index, info.currline->cpunr);
+            ++index;
             target_vector = &info.currline->line;
         } else if (token == "pv") {
             target_vector = &info.pv;
         } else if (token == "refutation") {
             target_vector = &info.refutation;
+        } else if (token == "string") {
+            target_vector = nullptr;
+            info.string = collect_string(tokens, index + 1);
         } else {
             if (target_vector == nullptr) {
-                throw UCIError("Invalid info command: unexpected token " + token);
+                continue;
             }
-            target_vector->push_back(parse_move());
+            const auto move = parse_uci_move(token);
+            if (move.has_value()) {
+                target_vector->push_back(move.value());
+            } else {
+                throw UCIError{"Invalid info command: move expected, but found " + token};
+            }
         }
     }
     return info;
@@ -184,9 +191,9 @@ auto UCIGuiHandler::parse_score(const TokenList &tokens, size_t index) -> score_
         }
 
         if (index + 3 < tokens.size()) {
-            if (tokens[index + 2] == "lowerbound") {
+            if (tokens[index + 3] == "lowerbound") {
                 info.lowerbound = true;
-            } else if (tokens[index + 2] == "upperbound") {
+            } else if (tokens[index + 3] == "upperbound") {
                 info.upperbound = true;
             }
         }
@@ -194,39 +201,77 @@ auto UCIGuiHandler::parse_score(const TokenList &tokens, size_t index) -> score_
     return info;
 }
 
+namespace {
+
+enum class OptionItem { name, type, default_value, min_value, max_value, var_value, unknown };
+
+auto process_option_item(OptionItem &item_type, std::string &value, Option &option) -> void {
+    if (value.empty() || item_type == OptionItem::unknown) {
+        return;
+    }
+
+    switch (item_type) {
+    case OptionItem::name:
+        option.name = value;
+        break;
+    case OptionItem::type:
+        option.type = Option::type_from_string(value);
+        break;
+    case OptionItem::default_value:
+        option.default_value = value;
+        break;
+    case OptionItem::min_value:
+        option.min = std::stoi(value);
+        break;
+    case OptionItem::max_value:
+        option.max = std::stoi(value);
+        break;
+    case OptionItem::var_value:
+        option.combo_values.push_back(value);
+        break;
+    default:
+        break;
+    }
+
+    item_type = OptionItem::unknown;
+    value.clear();
+}
+
+} // namespace
+
 auto UCIGuiHandler::parse_option_command(const TokenList &tokens) -> Option {
     Option option{};
-    if (tokens.size() < 5) {
-        throw UCIError("Invalid option command: to few arguments");
-    }
-    if (tokens[1] != "name") {
-        throw UCIError("Invalid option command: expected name");
-    }
-    if (tokens[3] != "type") {
-        throw UCIError("Invalid option command: expected type");
-    }
-    option.name = tokens[2];
-    option.type = Option::type_from_string(tokens[4]);
-    for (size_t index = 5; index < tokens.size(); ++index) {
+    OptionItem current_item{OptionItem::unknown};
+    std::string collected_tokens{};
+    for (size_t index = 1; index < tokens.size(); ++index) {
         const auto &token = tokens[index];
-        if (token == "default") {
-            if (index + 1 < tokens.size()) {
-                option.default_value = tokens[++index];
-            } else {
-                throw UCIError("Invalid option command: expected default value");
-            }
+        if (token == "name") {
+            process_option_item(current_item, collected_tokens, option);
+            current_item = OptionItem::name;
+        } else if (token == "type") {
+            process_option_item(current_item, collected_tokens, option);
+            current_item = OptionItem::type;
+        } else if (token == "default") {
+            process_option_item(current_item, collected_tokens, option);
+            current_item = OptionItem::default_value;
         } else if (token == "min") {
-            parse_int_param(tokens, index, option.min);
+            process_option_item(current_item, collected_tokens, option);
+            current_item = OptionItem::min_value;
         } else if (token == "max") {
-            parse_int_param(tokens, index, option.max);
+            process_option_item(current_item, collected_tokens, option);
+            current_item = OptionItem::max_value;
         } else if (token == "var") {
-            if (index + 1 < tokens.size()) {
-                option.combo_values.push_back(tokens[++index]);
+            process_option_item(current_item, collected_tokens, option);
+            current_item = OptionItem::var_value;
+        } else {
+            if (collected_tokens.empty()) {
+                collected_tokens = token;
             } else {
-                throw UCIError("Invalid option command: expected var value");
+                collected_tokens += " " + token;
             }
         }
     }
+    process_option_item(current_item, collected_tokens, option);
     return option;
 }
 
@@ -238,8 +283,19 @@ auto UCIGuiHandler::parse_int_param(const TokenList &tokens, size_t index, std::
             throw UCIError{"Invalid integer parameter"};
         }
     } else {
-        throw UCIError{"Missing parameter value"};
+        throw UCIError{"Missing integer parameter"};
     }
+}
+
+auto UCIGuiHandler::collect_string(const TokenList &tokens, size_t index) -> std::string {
+    std::ostringstream oss{};
+    if (index < tokens.size()) {
+        oss << tokens[index];
+    }
+    for (size_t i = index + 1; i < tokens.size(); ++i) {
+        oss << " " << tokens[i];
+    }
+    return oss.str();
 }
 
 } // namespace chessuci
