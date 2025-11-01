@@ -14,12 +14,12 @@
 #include <unordered_map>
 
 #include "chessuci/protocol.h"
+#include "chessuci/uci_handler.h"
 
 namespace chessuci {
 
-class UCIEngineHandler {
+class UCIEngineHandler : public UCIHandler {
 public:
-    using TokenList = std::vector<std::string>;
     using UciCallback = std::function<void()>;
     using DebugCallback = std::function<void(bool)>;
     using IsReadyCallback = std::function<void()>;
@@ -30,8 +30,6 @@ public:
     using StopCallback = std::function<void()>;
     using PonderHitCallback = std::function<void()>;
     using QuitCallback = std::function<void()>;
-    using CustomCommandCallback = std::function<void(const TokenList &)>;
-    using UnknownCommandCallback = std::function<void(const std::string &, const TokenList &)>;
 
     explicit UCIEngineHandler(std::istream &input = std::cin, std::ostream &output = std::cout);
     ~UCIEngineHandler();
@@ -50,13 +48,8 @@ public:
     auto on_ponderhit(PonderHitCallback callback) -> void { m_ponder_hit_callback = std::move(callback); }
     auto on_quit(QuitCallback callback) -> void { m_quit_callback = std::move(callback); }
 
-    auto register_command(const std::string &command, CustomCommandCallback callback) -> void;
-    auto unregister_command(const std::string &command) -> void;
-    auto on_unknown_command(UnknownCommandCallback callback) -> void { m_unknown_command_callback = std::move(callback); }
-
     auto start() -> void;
     auto stop() -> void;
-    auto is_running() const -> bool { return m_running; }
 
     auto send_id(const id_info &info) -> void;
     auto send_option(const Option &option) -> void;
@@ -66,17 +59,15 @@ public:
     auto send_bestmove(const UCIMove &move, const std::optional<UCIMove> &ponder = std::nullopt) -> void;
     auto send_info(const search_info &info) -> void;
     auto send_info_string(const std::string &message) -> void;
+
+    static auto parse_debug_command(const TokenList &tokens) -> bool;
+    static auto parse_set_option_command(const TokenList &tokens) -> setoption_command;
+    static auto parse_position_command(const TokenList &tokens) -> position_command;
+    static auto parse_go_command(const TokenList &tokens) -> go_command;
 private:
     std::istream &m_input;
     std::ostream &m_output;
-    std::atomic<bool> m_running{false};
-    std::mutex m_custom_commands_mutex;
-    std::unordered_map<std::string, CustomCommandCallback> m_custom_commands;
-    std::mutex m_output_mutex;
-    std::thread m_thread;
 
-    using CommandHandler = std::function<void(const TokenList &)>;
-    std::unordered_map<std::string, CommandHandler> m_uci_commands;
     auto setup_uci_commands() -> void;
 
     UciCallback m_uci_callback;
@@ -89,23 +80,8 @@ private:
     StopCallback m_stop_callback;
     PonderHitCallback m_ponder_hit_callback;
     QuitCallback m_quit_callback;
-    UnknownCommandCallback m_unknown_command_callback;
 
     auto read_loop() -> void;
-    auto process_line(const std::string &line) -> void;
-    static auto strip_trailing_whitespace(std::string &line) -> void;
-    static auto tokenize(const std::string &line) -> TokenList;
-    static auto parse_debug_command(const TokenList &tokens) -> bool;
-    static auto parse_set_option_command(const TokenList &tokens) -> setoption_command;
-    static auto parse_position_command(const TokenList &tokens) -> position_command;
-    static auto parse_go_command(const TokenList &tokens) -> go_command;
-
-    template<typename C, typename... Args>
-    auto call(const C &callback, Args &&...args) -> void {
-        if (callback) {
-            callback(std::forward<Args>(args)...);
-        }
-    }
 
     auto send_raw(const std::string &message) -> void;
 };

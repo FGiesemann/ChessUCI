@@ -46,4 +46,20 @@ auto Option::type_to_string() const -> std::string {
     }
 }
 
+auto Option::type_from_string(const std::string &str) -> Type {
+    if (str == "button") {
+        return Type::Button;
+    } else if (str == "check") {
+        return Type::Check;
+    } else if (str == "combo") {
+        return Type::Combo;
+    } else if (str == "spin") {
+        return Type::Spin;
+    } else if (str == "string") {
+        return Type::String;
+    } else {
+        throw UCIError("unknown option type: " + str);
+    }
+}
+
 } // namespace chessuci
