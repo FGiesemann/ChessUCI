@@ -5,6 +5,9 @@
 
 #include "chessuci/engine_process_unix.h"
 
+#include <fcntl.h>
+#include <sys/wait.h>
+
 namespace chessuci {
 
 EngineProcessUnix::~EngineProcessUnix() {
