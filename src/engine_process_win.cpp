@@ -38,6 +38,11 @@ auto EngineProcessWin::wide_to_utf8(const std::wstring &wide) -> std::string {
     return result;
 }
 
+EngineProcessWin::EngineProcessWin() {
+    m_write_event = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    m_read_event = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+}
+
 EngineProcessWin::~EngineProcessWin() {
     if (is_running()) {
         terminate(1000);
@@ -107,7 +112,7 @@ auto EngineProcessWin::terminate(int timeout_ms) -> bool {
         return true;
     }
 
-    write_line("quit"); // this does not return for the "hanging" engine process!
+    write_line("quit");
     DWORD exit_code{};
     if (wait_for_process(timeout_ms, exit_code)) {
         m_running = false;
@@ -171,13 +176,36 @@ auto EngineProcessWin::write_line(const std::string &line) -> bool {
 
     std::string message = line + "\n";
     auto bytes_to_write = static_cast<DWORD>(message.size());
+    OVERLAPPED overlapped{};
+    overlapped.hEvent = m_write_event;
+    ResetEvent(m_write_event);
+
     DWORD bytes_written{0};
-    bool success = WriteFile(m_std_in.write(), message.c_str(), bytes_to_write, &bytes_written, nullptr) == TRUE;
-    if (!success || bytes_written != bytes_to_write) {
-        set_error("WriteFile failed: " + format_windows_error(GetLastError()));
-        return false;
+    bool success = WriteFile(m_std_in.write(), message.c_str(), bytes_to_write, &bytes_written, &overlapped) == TRUE;
+    if (!success) {
+        DWORD error = GetLastError();
+        if (error == ERROR_IO_PENDING) {
+            constexpr DWORD write_timeout = 1000;
+            DWORD wait_result = WaitForSingleObject(m_write_event, write_timeout);
+            if (wait_result == WAIT_TIMEOUT) {
+                CancelIo(m_std_in.write());
+                set_error("Write timed out");
+                return false;
+            }
+            if (wait_result != WAIT_OBJECT_0) {
+                set_error("Write failed: " + format_windows_error(error));
+                return false;
+            }
+
+            if (GetOverlappedResult(m_std_in.write(), &overlapped, &bytes_written, FALSE) == FALSE) {
+                set_error("Write failed: " + format_windows_error(error));
+                return false;
+            }
+        } else {
+            set_error("Write failed: " + format_windows_error(error));
+            return false;
+        }
     }
-    FlushFileBuffers(m_std_in.write());
 
     return true;
 }
@@ -296,7 +324,9 @@ auto EngineProcessWin::create_child_process(const ProcessParams &params) -> bool
 }
 
 auto EngineProcessWin::close_handles() -> void {
-    close_handle(&m_process_handle);
+    close_handle(m_process_handle);
+    close_handle(m_write_event);
+    close_handle(m_read_event);
 }
 
 auto EngineProcessWin::build_command_line(const ProcessParams &params) -> std::wstring {
