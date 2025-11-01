@@ -69,9 +69,11 @@ auto EngineProcessWin::start(const ProcessParams &params) -> bool {
     if (GetExitCodeProcess(m_process_handle, &exit_code) == TRUE) {
         if (exit_code != STILL_ACTIVE) {
             m_running = false;
-            set_error("Process exited immediately with code " + std::to_string(exit_code));
-            close_handles();
-            return false;
+            if (exit_code != 0) {
+                set_error("Process exited immediately with code " + std::to_string(exit_code));
+                close_handles();
+                return false;
+            }
         }
     }
 
@@ -105,7 +107,7 @@ auto EngineProcessWin::terminate(int timeout_ms) -> bool {
         return true;
     }
 
-    write_line("quit");
+    write_line("quit"); // this does not return for the "hanging" engine process!
     DWORD exit_code{};
     if (wait_for_process(timeout_ms, exit_code)) {
         m_running = false;
