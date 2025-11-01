@@ -1,4 +1,5 @@
 add_executable(chessuci_unittests
+    src/engine_handler_parsing_test.cpp
     src/uci_move_matcher_test.cpp
     src/uci_move_parser_test.cpp
 )
