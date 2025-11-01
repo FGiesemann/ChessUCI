@@ -14,7 +14,7 @@ namespace chessuci {
 
 class EngineProcessWin : public EngineProcess {
 public:
-    EngineProcessWin() = default;
+    EngineProcessWin();
     ~EngineProcessWin() override;
 
     /** \copydoc EngineProcess::start */
@@ -52,10 +52,10 @@ public:
 private:
     static constexpr DWORD terminate_timeout{5000};
 
-    static auto close_handle(HANDLE *handle) -> void {
-        if (*handle != INVALID_HANDLE_VALUE) {
-            CloseHandle(*handle);
-            *handle = INVALID_HANDLE_VALUE;
+    static auto close_handle(HANDLE &handle) -> void {
+        if (handle != INVALID_HANDLE_VALUE) {
+            CloseHandle(handle);
+            handle = INVALID_HANDLE_VALUE;
         }
     }
 
@@ -73,8 +73,8 @@ private:
         auto write() const -> const HANDLE & { return m_write; }
         auto write() -> HANDLE & { return m_write; }
 
-        auto close_read() -> void { close_handle(&m_read); }
-        auto close_write() -> void { close_handle(&m_write); }
+        auto close_read() -> void { close_handle(m_read); }
+        auto close_write() -> void { close_handle(m_write); }
     private:
         HANDLE m_read{INVALID_HANDLE_VALUE};
         HANDLE m_write{INVALID_HANDLE_VALUE};
@@ -89,6 +89,9 @@ private:
     mutable std::string m_last_error{};
 
     std::string m_read_buffer;
+
+    HANDLE m_write_event{INVALID_HANDLE_VALUE};
+    HANDLE m_read_event{INVALID_HANDLE_VALUE};
 
     auto create_pipes() -> bool;
     auto create_child_process(const ProcessParams &params) -> bool;
