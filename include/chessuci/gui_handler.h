@@ -44,6 +44,9 @@ public:
     static auto parse_info_command(const TokenList &tokens) -> search_info;
     static auto parse_option_command(const TokenList &tokens) -> Option;
     static auto parse_score(const TokenList &tokens, size_t index) -> score_info;
+
+    static auto parse_int_param(const TokenList &tokens, size_t index, std::optional<int> &target) -> void;
+    static auto collect_string(const TokenList &tokens, size_t index) -> std::string;
 private:
     static constexpr int engine_terminate_timeout{3000};
 
@@ -61,8 +64,6 @@ private:
 
     auto setup_uci_commands() -> void;
     auto read_loop() -> void;
-
-    static auto parse_int_param(const TokenList &tokens, size_t index, std::optional<int> &target) -> void;
 };
 
 } // namespace chessuci
