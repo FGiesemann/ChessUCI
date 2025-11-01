@@ -22,7 +22,6 @@ TEST_CASE("ProcessTests.Process can be started", "[process][basic]") {
 
     auto binary = get_test_binary_path("test_echo");
     REQUIRE(process->start({binary, {"hello", "world"}}));
-
     REQUIRE(process->is_running());
     REQUIRE(process->pid() > 0);
 }
@@ -31,7 +30,7 @@ TEST_CASE("ProcessTests.Process exits immediately", "[process][exit]") {
     auto process = chessuci::ProcessFactory::create_local();
 
     auto binary = get_test_binary_path("test_immediate_exit");
-    REQUIRE(process->start({binary, {"42"}}));
+    process->start({binary, {"42"}}); // non-zero exit code signifies error
 
     auto exit_code = process->wait_for_exit(5000);
     REQUIRE(exit_code.has_value());
@@ -138,7 +137,6 @@ TEST_CASE("ProcessTests.Detect crashed process", "[process][crash]") {
 
     auto binary = get_test_binary_path("test_crash");
     REQUIRE(process->start({binary, {"500"}})); // Crash after 500ms
-
     REQUIRE(process->is_running());
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
