@@ -40,7 +40,7 @@ auto EngineProcessUnix::start(const ProcessParams &params) -> bool {
     m_std_err.close_write();
 
     if (!set_non_blocking(m_std_out.read())) {
-        set_error("Failes to set stdout pipe non-blocking: ");
+        set_error("Failed to set stdout pipe non-blocking: ");
         kill();
         return false;
     }
@@ -66,7 +66,7 @@ auto EngineProcessUnix::start(const ProcessParams &params) -> bool {
 }
 
 auto EngineProcessUnix::is_running() const -> bool {
-    if (!m_running || m_pid != -1) {
+    if (!m_running || m_pid == -1) {
         return false;
     }
 
@@ -108,7 +108,7 @@ auto EngineProcessUnix::kill() -> void {
     ::kill(m_pid, SIGKILL);
 
     int status;
-    waipid(m_pid, &status, 0);
+    waitpid(m_pid, &status, 0);
     m_running = false;
     close_pipes();
 }
@@ -140,20 +140,20 @@ auto EngineProcessUnix::write_line(const std::string &line) -> bool {
 
     std::string message = line + "\n";
     const char *data = message.c_str();
-    std::size_t remaining = message.size();
+    size_t remaining = message.size();
 
     while (remaining > 0) {
-        std::ssize_t written = write(m_std_in.write(), data, remaining);
+        auto written = write(m_std_in.write(), data, remaining);
         if (written == -1) {
             if (errno == EINTR) {
                 continue; // Interrupted, try again
             }
-            set_error("Write failes: " + strerror(errno));
+            set_error(std::string{"Write failes: "} + strerror(errno));
             return false;
         }
 
-        data += writte;
-        remaining -= written;
+        data += written;
+        remaining -= static_cast<size_t>(written);
     }
 
     return true;
@@ -173,9 +173,9 @@ auto EngineProcessUnix::read_line(std::string &line) -> bool {
 
     char buffer[4096];
     while (true) {
-        std::ssize_t bytes_read = read(m_std_out.read(), buffer, sizeof(buffer));
+        ssize_t bytes_read = read(m_std_out.read(), buffer, sizeof(buffer));
         if (bytes_read > 0) {
-            m_read_buffer.append(buffer, bytes_read);
+            m_read_buffer.append(buffer, static_cast<size_t>(bytes_read));
 
             newline_pos = m_read_buffer.find('\n');
             if (newline_pos != std::string::npos) {
@@ -198,7 +198,7 @@ auto EngineProcessUnix::read_line(std::string &line) -> bool {
                 usleep(1000);
                 continue;
             }
-            set_error("Read failes: " + strerror(errno));
+            set_error(std::string{"Read failes: "} + strerror(errno));
             return false;
         }
     }
@@ -272,15 +272,15 @@ auto EngineProcessUnix::wait_for_child(int timeout_ms, int &exit_status) -> bool
 
 auto EngineProcessUnix::create_pipes() -> bool {
     if (!m_std_in.create()) {
-        set_error("Failed to create stdin pipe: " + strerror(errno));
+        set_error(std::string{"Failed to create stdin pipe: "} + strerror(errno));
         return false;
     }
     if (!m_std_out.create()) {
-        set_error("Failed to create stdout pipe: " + strerror(errno));
+        set_error(std::string{"Failed to create stdout pipe: "} + strerror(errno));
         return false;
     }
     if (!m_std_err.create()) {
-        set_error("Failed to create stderr pipe: " + strerror(errno));
+        set_error(std::string{"Failed to create stderr pipe: "} + strerror(errno));
         return false;
     }
     return true;
@@ -289,7 +289,7 @@ auto EngineProcessUnix::create_pipes() -> bool {
 auto EngineProcessUnix::create_child_process(const ProcessParams &params) -> bool {
     m_pid = fork();
     if (m_pid == -1) {
-        set_error("Failed to fork: " + strerror(errno));
+        set_error(std::string{"Failed to fork: "} + strerror(errno));
         return false;
     }
 
@@ -320,6 +320,8 @@ auto EngineProcessUnix::create_child_process(const ProcessParams &params) -> boo
         execvp(params.executable.c_str(), argv.data());
         _exit(127);
     }
+
+    return true;
 }
 
 } // namespace chessuci
