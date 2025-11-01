@@ -38,8 +38,6 @@ public:
 
     UCIEngineHandler(const UCIEngineHandler &) = delete;
     auto operator=(const UCIEngineHandler &) -> UCIEngineHandler & = delete;
-    UCIEngineHandler(UCIEngineHandler &&) = default;
-    auto operator=(UCIEngineHandler &&) -> UCIEngineHandler & = default;
 
     auto on_uci(UciCallback callback) -> void { m_uci_callback = std::move(callback); }
     auto on_debug(DebugCallback callback) -> void { m_debug_callback = std::move(callback); }
