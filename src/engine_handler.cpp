@@ -49,30 +49,6 @@ auto UCIEngineHandler::read_loop() -> void {
     m_running = false;
 }
 
-auto UCIEngineHandler::process_line(const std::string &line) -> void {
-    const auto tokens = tokenize(line);
-    if (tokens.empty()) {
-        return;
-    }
-    const auto &command = tokens[0];
-    const auto command_it = m_uci_commands.find(command);
-    if (command_it != m_uci_commands.end()) {
-        command_it->second(tokens);
-        return;
-    }
-
-    {
-        std::lock_guard<std::mutex> lock{m_custom_commands_mutex};
-        auto custom_it = m_custom_commands.find(command);
-        if (custom_it != m_custom_commands.end()) {
-            custom_it->second(tokens);
-            return;
-        }
-    }
-
-    call(m_unknown_command_callback, command, tokens);
-}
-
 auto UCIEngineHandler::send_raw(const std::string &message) -> void {
     std::lock_guard<std::mutex> lock{m_output_mutex};
     // we are using std::endl here, to flush the buffer
@@ -176,32 +152,6 @@ auto UCIEngineHandler::send_info(const search_info &info) -> void {
 
 auto UCIEngineHandler::send_info_string(const std::string &message) -> void {
     send_raw("info string " + message);
-}
-
-auto UCIEngineHandler::register_command(const std::string &command, CustomCommandCallback callback) -> void {
-    std::lock_guard<std::mutex> lock{m_custom_commands_mutex};
-    m_custom_commands[command] = std::move(callback);
-}
-
-auto UCIEngineHandler::unregister_command(const std::string &command) -> void {
-    std::lock_guard<std::mutex> lock{m_custom_commands_mutex};
-    m_custom_commands.erase(command);
-}
-
-auto UCIEngineHandler::strip_trailing_whitespace(std::string &line) -> void {
-    line.erase(std::ranges::find_if(std::ranges::reverse_view(line), [](int chr) { return !std::isspace(chr); }).base(), line.end());
-}
-
-auto UCIEngineHandler::tokenize(const std::string &line) -> std::vector<std::string> {
-    std::vector<std::string> tokens;
-    std::istringstream iss(line);
-    std::string token;
-
-    while (iss >> token) {
-        tokens.push_back(token);
-    }
-
-    return tokens;
 }
 
 auto UCIEngineHandler::setup_uci_commands() -> void {

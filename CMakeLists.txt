@@ -12,9 +12,11 @@ include(cmake/compiler_warnings.cmake)
 add_library(${PROJECT_NAME}
     src/engine_handler.cpp
     src/engine_process.cpp
+    src/gui_handler.cpp
     src/move.cpp
     src/process_factory.cpp
     src/protocol.cpp
+    src/uci_handler.cpp
 )
 if(WIN32)
     target_sources(${PROJECT_NAME} PRIVATE src/engine_process_win.cpp)

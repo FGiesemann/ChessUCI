@@ -60,8 +60,8 @@ struct bestmove_info {
 struct score_info {
     std::optional<int> cp;
     std::optional<int> mate;
-    std::optional<int> lowerbound;
-    std::optional<int> upperbound;
+    bool lowerbound;
+    bool upperbound;
 };
 
 struct line_info {
@@ -101,6 +101,7 @@ struct Option {
 
     auto to_uci_string() const -> std::string;
     auto type_to_string() const -> std::string;
+    static auto type_from_string(const std::string &str) -> Type;
 };
 
 } // namespace chessuci
