@@ -38,14 +38,11 @@ auto EngineProcessWin::wide_to_utf8(const std::wstring &wide) -> std::string {
     return result;
 }
 
-EngineProcessWin::EngineProcessWin() {
-    m_write_event = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-    m_read_event = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-}
+EngineProcessWin::EngineProcessWin() : m_write_event{CreateEvent(nullptr, TRUE, FALSE, nullptr)}, m_read_event{CreateEvent(nullptr, TRUE, FALSE, nullptr)} {}
 
 EngineProcessWin::~EngineProcessWin() {
     if (is_running()) {
-        terminate(1000);
+        terminate(final_terminate_timeout);
         if (is_running()) {
             kill();
         }
@@ -185,7 +182,6 @@ auto EngineProcessWin::write_line(const std::string &line) -> bool {
     if (!success) {
         DWORD error = GetLastError();
         if (error == ERROR_IO_PENDING) {
-            constexpr DWORD write_timeout = 1000;
             DWORD wait_result = WaitForSingleObject(m_write_event, write_timeout);
             if (wait_result == WAIT_TIMEOUT) {
                 CancelIo(m_std_in.write());
@@ -221,13 +217,15 @@ auto EngineProcessWin::read_line(std::string &line) -> bool {
         return true;
     }
 
-    char buffer[4096];
+    constexpr size_t buffer_size{4096};
+    std::vector<char> buffer;
+    buffer.resize(buffer_size);
     while (true) {
         DWORD bytes_read = 0;
-        bool success = ReadFile(m_std_out.read(), buffer, sizeof(buffer), &bytes_read, nullptr) == TRUE;
+        bool success = ReadFile(m_std_out.read(), buffer.data(), static_cast<DWORD>(buffer.size()), &bytes_read, nullptr) == TRUE;
 
         if (success && bytes_read > 0) {
-            m_read_buffer.append(buffer, bytes_read);
+            m_read_buffer.append(buffer.data(), bytes_read);
             newline_pos = m_read_buffer.find('\n');
             if (newline_pos != std::string::npos) {
                 line = m_read_buffer.substr(0, newline_pos);

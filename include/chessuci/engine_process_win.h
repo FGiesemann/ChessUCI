@@ -51,6 +51,8 @@ public:
     static auto wide_to_utf8(const std::wstring &wide) -> std::string;
 private:
     static constexpr DWORD terminate_timeout{5000};
+    static constexpr DWORD final_terminate_timeout{1000};
+    static constexpr DWORD write_timeout{1000};
 
     static auto close_handle(HANDLE &handle) -> void {
         if (handle != INVALID_HANDLE_VALUE) {
