@@ -80,6 +80,7 @@ private:
     pid_t m_pid{-1};
     mutable std::atomic<bool> m_running{false};
     mutable std::string m_last_error;
+    mutable int m_stored_exit_code{};
 
     std::string m_read_buffer;
 

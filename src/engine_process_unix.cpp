@@ -54,12 +54,17 @@ auto EngineProcessUnix::start(const ProcessParams &params) -> bool {
     if (result == m_pid) {
         m_running = false;
         if (WIFEXITED(status)) {
-            set_error("Process exited immediately with code " + std::to_string(WEXITSTATUS(status)));
+            m_stored_exit_code = WEXITSTATUS(status);
+            if (m_stored_exit_code != 0) {
+                set_error("Process exited immediately with code " + std::to_string(WEXITSTATUS(status)));
+                close_pipes();
+                return false;
+            }
         } else {
-            set_error("Process terminated immediately");
+            set_error("Process terminated immediately by signal");
+            close_pipes();
+            return false;
         }
-        close_pipes();
-        return false;
     }
 
     return true;
@@ -72,8 +77,19 @@ auto EngineProcessUnix::is_running() const -> bool {
 
     int status;
     pid_t result = waitpid(m_pid, &status, WNOHANG);
-    if (result == m_pid || result == -1) {
+    if (result == m_pid) {
         m_running = false;
+        if (WIFEXITED(status)) {
+            m_stored_exit_code = WEXITSTATUS(status);
+        }
+        if (WIFSIGNALED(status)) {
+            m_stored_exit_code = WTERMSIG(status);
+        }
+        return false;
+    }
+    if (result == -1) {
+        m_running = false;
+        m_stored_exit_code = -1;
         return false;
     }
 
@@ -118,12 +134,19 @@ auto EngineProcessUnix::wait_for_exit(int timeout_ms) -> std::optional<int> {
         return std::nullopt;
     }
 
+    if (!m_running) {
+        return m_stored_exit_code;
+    }
+
     int exit_status;
     if (wait_for_child(timeout_ms, exit_status)) {
         m_running = false;
         close_pipes();
         if (WIFEXITED(exit_status)) {
             return WEXITSTATUS(exit_status);
+        }
+        if (WIFSIGNALED(exit_status)) {
+            return WTERMSIG(exit_status);
         }
 
         return -1;
