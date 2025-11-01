@@ -1,4 +1,6 @@
+#include <chrono>
 #include <iostream>
+#include <thread>
 
 auto main(int argc, char *argv[]) -> int {
     for (int i = 1; i < argc; ++i) {
@@ -8,5 +10,8 @@ auto main(int argc, char *argv[]) -> int {
         }
     }
     std::cout << std::endl;
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
     return 0;
 }
