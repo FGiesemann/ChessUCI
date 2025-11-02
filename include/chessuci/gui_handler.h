@@ -27,6 +27,7 @@ public:
     using OptionCallback = std::function<void(const Option &)>;
 
     explicit UCIGuiHandler();
+    explicit UCIGuiHandler(std::unique_ptr<EngineProcess> process);
     ~UCIGuiHandler();
 
     auto on_id_name(IdNameCallback callback) -> void { m_id_name_callback = std::move(callback); }
@@ -50,6 +51,7 @@ public:
 
     auto start(const ProcessParams &params) -> bool;
     auto stop() -> void;
+    auto process() const -> const EngineProcess & { return *m_process; }
 
     static auto parse_bestmove_command(const TokenList &tokens) -> bestmove_info;
     static auto parse_info_command(const TokenList &tokens) -> search_info;

@@ -11,6 +11,10 @@ UCIGuiHandler::UCIGuiHandler() : m_process{ProcessFactory::create_local()} {
     setup_uci_commands();
 }
 
+UCIGuiHandler::UCIGuiHandler(std::unique_ptr<EngineProcess> process) : m_process{std::move(process)} {
+    setup_uci_commands();
+}
+
 UCIGuiHandler::~UCIGuiHandler() {
     if (m_running) {
         stop();
