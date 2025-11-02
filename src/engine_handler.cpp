@@ -16,22 +16,18 @@ UCIEngineHandler::UCIEngineHandler(std::istream &input, std::ostream &output) : 
 }
 
 UCIEngineHandler::~UCIEngineHandler() {
-    if (m_running) {
-        stop();
-    }
+    stop();
 }
 
 auto UCIEngineHandler::start() -> void {
     if (m_running.exchange(true)) {
         return;
     }
-    m_thread = std::thread([this] { read_loop(); });
+    m_thread = std::thread([this] -> void { read_loop(); });
 }
 
 auto UCIEngineHandler::stop() -> void {
-    if (!m_running.exchange(false)) {
-        return;
-    }
+    m_running = false;
     if (m_thread.joinable()) {
         m_thread.join();
     }
