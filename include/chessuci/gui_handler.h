@@ -37,6 +37,17 @@ public:
     auto on_info(InfoCallback callback) -> void { m_info_callback = std::move(callback); }
     auto on_option(OptionCallback callback) -> void { m_option_callback = std::move(callback); }
 
+    auto send_uci() -> bool;
+    auto send_debug(bool on) -> bool;
+    auto send_isready() -> bool;
+    auto send_ucinewgame() -> bool;
+    auto send_position(const position_command &command) -> bool;
+    auto send_go(const go_command &command) -> bool;
+    auto send_stop() -> bool;
+    auto send_ponderhist() -> bool;
+    auto send_quit() -> bool;
+    auto send_raw(const std::string &message) -> bool;
+
     auto start(const ProcessParams &params) -> bool;
     auto stop() -> void;
 
