@@ -16,9 +16,7 @@ UCIGuiHandler::UCIGuiHandler(std::unique_ptr<EngineProcess> process) : m_process
 }
 
 UCIGuiHandler::~UCIGuiHandler() {
-    if (m_running) {
-        stop();
-    }
+    stop();
 }
 
 auto UCIGuiHandler::start(const ProcessParams &params) -> bool {
@@ -35,9 +33,7 @@ auto UCIGuiHandler::start(const ProcessParams &params) -> bool {
 }
 
 auto UCIGuiHandler::stop() -> void {
-    if (!m_running.exchange(false)) {
-        return;
-    }
+    m_running = false;
     m_process->terminate(engine_terminate_timeout);
     if (m_process->is_running()) {
         m_process->kill();
