@@ -59,6 +59,7 @@ public:
     auto send_bestmove(const UCIMove &move, const std::optional<UCIMove> &ponder = std::nullopt) -> void;
     auto send_info(const search_info &info) -> void;
     auto send_info_string(const std::string &message) -> void;
+    auto send_raw(const std::string &message) -> void;
 
     static auto parse_debug_command(const TokenList &tokens) -> bool;
     static auto parse_set_option_command(const TokenList &tokens) -> setoption_command;
@@ -82,8 +83,6 @@ private:
     QuitCallback m_quit_callback;
 
     auto read_loop() -> void;
-
-    auto send_raw(const std::string &message) -> void;
 };
 
 } // namespace chessuci
