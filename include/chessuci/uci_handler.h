@@ -20,7 +20,7 @@ class UCIHandler {
 public:
     using TokenList = std::vector<std::string>;
     using CustomCommandCallback = std::function<void(const TokenList &)>;
-    using UnknownCommandCallback = std::function<void(const std::string &, const TokenList &)>;
+    using UnknownCommandCallback = std::function<void(const TokenList &)>;
 
     auto is_running() const -> bool { return m_running; }
 

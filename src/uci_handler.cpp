@@ -41,7 +41,7 @@ auto UCIHandler::process_line(const std::string &line) -> void {
         }
     }
 
-    call(m_unknown_command_callback, command, tokens);
+    call(m_unknown_command_callback, tokens);
 }
 
 auto UCIHandler::strip_trailing_whitespace(std::string &line) -> void {
