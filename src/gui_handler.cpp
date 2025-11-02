@@ -43,6 +43,47 @@ auto UCIGuiHandler::stop() -> void {
     }
 }
 
+auto UCIGuiHandler::send_uci() -> bool {
+    return send_raw("uci");
+}
+
+auto UCIGuiHandler::send_debug(bool on) -> bool {
+    return send_raw(on ? "debug on" : "debug off");
+}
+
+auto UCIGuiHandler::send_isready() -> bool {
+    return send_raw("isready");
+}
+
+auto UCIGuiHandler::send_ucinewgame() -> bool {
+    return send_raw("ucinewgame");
+}
+
+auto UCIGuiHandler::send_position(const position_command &command) -> bool {
+    return send_raw(to_string(command));
+}
+
+auto UCIGuiHandler::send_go(const go_command &command) -> bool {
+    return send_raw(to_string(command));
+}
+
+auto UCIGuiHandler::send_stop() -> bool {
+    return send_raw("stop");
+}
+
+auto UCIGuiHandler::send_ponderhist() -> bool {
+    return send_raw("ponderhist");
+}
+
+auto UCIGuiHandler::send_quit() -> bool {
+    return send_raw("quit");
+}
+
+auto UCIGuiHandler::send_raw(const std::string &message) -> bool {
+    std::lock_guard<std::mutex> lock{m_output_mutex};
+    return m_process->write_line(message);
+}
+
 auto UCIGuiHandler::read_loop() -> void {
     std::string line;
     while (m_running && m_process->read_line(line)) {
