@@ -9,6 +9,56 @@
 
 namespace chessuci {
 
+namespace {
+
+auto add_bool_flag(std::string &line, const std::string &name, bool flag) -> void {
+    if (flag) {
+        line += " " + name;
+    }
+}
+
+template<typename T>
+auto add_optional_value(std::string &line, const std::string &name, const std::optional<T> &value) -> void {
+    if (value.has_value()) {
+        line += " " + name + " " + std::to_string(value.value());
+    }
+}
+
+auto add_move_list(std::string &line, const std::vector<UCIMove> &moves, const std::string &name = "") -> void {
+    if (!moves.empty()) {
+        line += " " + name;
+    }
+    for (const auto &move : moves) {
+        line += " " + to_string(move);
+    }
+}
+
+} // namespace
+
+auto to_string(const position_command &command) -> std::string {
+    std::string message{"position " + command.fen};
+    add_move_list(message, command.moves);
+    return message;
+}
+
+auto to_string(const go_command &command) -> std::string {
+    std::string message{"go"};
+    add_move_list(message, command.searchmoves, "searchmoves");
+    add_bool_flag(message, "ponder", command.ponder);
+    add_optional_value(message, "wtime", command.wtime);
+    add_optional_value(message, "btime", command.btime);
+    add_optional_value(message, "winc", command.winc);
+    add_optional_value(message, "binc", command.binc);
+    add_optional_value(message, "movestogo", command.movestogo);
+    add_optional_value(message, "depth", command.depth);
+    add_optional_value(message, "nodes", command.nodes);
+    add_optional_value(message, "mate", command.mate);
+    add_optional_value(message, "movetime", command.movetime);
+    add_bool_flag(message, "infinite", command.infinite);
+
+    return message;
+}
+
 auto Option::to_uci_string() const -> std::string {
     std::ostringstream oss;
     oss << "option ";

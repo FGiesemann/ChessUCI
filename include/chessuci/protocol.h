@@ -32,6 +32,8 @@ struct position_command {
     std::vector<UCIMove> moves;
 };
 
+auto to_string(const position_command &command) -> std::string;
+
 struct go_command {
     std::vector<UCIMove> searchmoves;
     bool ponder = false;
@@ -46,6 +48,8 @@ struct go_command {
     std::optional<int> movetime;
     bool infinite = false;
 };
+
+auto to_string(const go_command &command) -> std::string;
 
 struct id_info {
     std::string name;
