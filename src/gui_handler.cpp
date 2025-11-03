@@ -109,8 +109,10 @@ auto UCIGuiHandler::handle_id_message(const TokenList &tokens) const -> void {
     if (tokens.size() > 2) {
         if (tokens[1] == "name") {
             call(m_id_name_callback, tokens[2]);
+            return;
         } else if (tokens[1] == "author") {
             call(m_id_author_callback, tokens[2]);
+            return;
         }
     }
     throw UCIError("Invalid id command: expected name or author");
