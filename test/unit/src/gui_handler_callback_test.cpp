@@ -9,7 +9,6 @@
 #include "helper/EngineProcessMock.h"
 
 #include <future>
-#include <iostream>
 
 using namespace chessuci;
 
@@ -66,7 +65,7 @@ TEST_CASE("GuiHandler.Callback.Quit", "[gui_handler]") {
     auto quit_future = quit_done.get_future();
     auto mock_engine = std::make_unique<test::EngineProcessMock>();
     mock_engine->when_receives("quit", [&quit_done](const std::string &) -> std::vector<std::string> {
-        // quit_done.set_value();
+        quit_done.set_value();
         return {};
     });
 
@@ -85,18 +84,12 @@ TEST_CASE("GuiHandler.Callback.Isready", "[gui_handler]") {
     UCIGuiHandler handler{std::move(mock_engine)};
     std::promise<void> isready_done;
     auto isready_future = isready_done.get_future();
-    handler.on_readyok([&isready_done]() -> void {
-        std::cout << "Received readyok" << std::endl;
-        isready_done.set_value();
-    });
+    handler.on_readyok([&isready_done]() -> void { isready_done.set_value(); });
 
-    handler.start({});
-    handler.send_isready();
-    // REQUIRE(isready_future.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    REQUIRE(handler.start({}));
+    REQUIRE(handler.send_isready());
+    REQUIRE(isready_future.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
     handler.stop();
-    std::cout << "IsReady Test done" << std::endl;
-    FAIL();
 }
 
 TEST_CASE("GuiHandler.Callback.UCI", "[gui_handler]") {
@@ -113,26 +106,15 @@ TEST_CASE("GuiHandler.Callback.UCI", "[gui_handler]") {
     handler.on_id_author([&id_author_done](const std::string &author) -> void { id_author_done.set_value(author); });
     std::promise<void> uciok_done;
     auto uciok_future = uciok_done.get_future();
-    handler.on_uciok([&uciok_done]() -> void {
-        uciok_done.set_value();
-        std::cout << "UCI callback" << std::endl;
-    });
-
-    std::cout << "Starting handler" << std::endl;
+    handler.on_uciok([&uciok_done]() -> void { uciok_done.set_value(); });
 
     REQUIRE(handler.start({}));
     REQUIRE(handler.send_uci());
     REQUIRE(id_name_future.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
     CHECK(id_name_future.get() == "test_engine");
-    std::cout << "id name received" << std::endl;
     REQUIRE(id_author_future.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
     CHECK(id_author_future.get() == "test_author");
-    std::cout << "id author received" << std::endl;
     REQUIRE(uciok_future.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
-    std::cout << "uciok received" << std::endl;
 
-    std::cout << "All callbacks called" << std::endl;
     handler.stop();
-
-    FAIL();
 }
