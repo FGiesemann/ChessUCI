@@ -8,6 +8,7 @@
 
 #include "chessuci/engine_process.h"
 
+#include <atomic>
 #include <functional>
 #include <mutex>
 #include <queue>
@@ -42,14 +43,14 @@ public:
     auto pid() const -> proc_id_t override { return 12; }
     auto kill() -> void override { m_running = false; }
     auto wait_for_exit(int) -> std::optional<int> override { return 0; }
-    auto can_read() const -> bool override { return !m_pending_responses.empty(); }
+    auto can_read() const -> bool override;
     auto last_error() const -> const std::string & override { return m_last_error; }
 private:
     std::unordered_map<std::string, ResponseFunction> m_responses;
-    std::mutex m_queue_mutex;
+    mutable std::mutex m_queue_mutex;
     std::queue<std::string> m_pending_responses;
 
-    bool m_running{false};
+    std::atomic<bool> m_running{false};
     std::string m_last_error{};
 };
 
