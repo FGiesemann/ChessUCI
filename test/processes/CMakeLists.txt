@@ -58,7 +58,5 @@ if(UNIX)
     add_dependencies(chessuci_processhandling_tests test_zombie)
 endif()
 
-#add_test(NAME ProcessTests COMMAND chessuci_processhandling_tests)
-#set_tests_properties(ProcessTests PROPERTIES TIMEOUT 60)
 include(Catch)
 catch_discover_tests(chessuci_processhandling_tests PROPERTIES TIMEOUT 60)
