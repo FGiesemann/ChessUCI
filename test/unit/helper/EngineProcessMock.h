@@ -39,7 +39,7 @@ public:
         return true;
     }
 
-    auto is_running() const -> bool { return m_running; }
+    auto is_running() const -> bool override { return m_running; }
     auto pid() const -> proc_id_t override { return 12; }
     auto kill() -> void override { m_running = false; }
     auto wait_for_exit(int) -> std::optional<int> override { return 0; }
