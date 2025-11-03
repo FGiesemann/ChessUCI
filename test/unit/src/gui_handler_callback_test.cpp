@@ -45,7 +45,12 @@ TEST_CASE("EngineProcessMock", "[engine_process_mock]") {
     mock.when_receives("test", [](const std::string &) -> std::vector<std::string> { return {"response1", "response2"}; });
     mock.when_receives("stop", [](const std::string &) -> std::vector<std::string> { return {"stop requested"}; });
 
+    mock.start({});
+
+    REQUIRE_FALSE(mock.can_read());
+
     mock.write_line("test");
+    REQUIRE(mock.can_read());
 
     std::string line;
     REQUIRE(mock.read_line(line));
