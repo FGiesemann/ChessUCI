@@ -118,3 +118,36 @@ TEST_CASE("GuiHandler.Callback.UCI", "[gui_handler]") {
 
     handler.stop();
 }
+
+TEST_CASE("GuiHandler.Callback.Multiple", "[gui_handler]") {
+    auto mock_engine = std::make_unique<test::EngineProcessMock>();
+    mock_engine->when_receives("uci", [](const std::string &) -> std::vector<std::string> { return {"id name test_engine", "id author test_author", "uciok"}; });
+    mock_engine->when_receives("isready", [](const std::string &) -> std::vector<std::string> { return {"readyok"}; });
+
+    UCIGuiHandler handler{std::move(mock_engine)};
+
+    std::promise<std::string> id_name_done;
+    auto id_name_future = id_name_done.get_future();
+    handler.on_id_name([&id_name_done](const std::string &name) -> void { id_name_done.set_value(name); });
+    std::promise<std::string> id_author_done;
+    auto id_author_future = id_author_done.get_future();
+    handler.on_id_author([&id_author_done](const std::string &author) -> void { id_author_done.set_value(author); });
+    std::promise<void> uciok_done;
+    auto uciok_future = uciok_done.get_future();
+    handler.on_uciok([&uciok_done]() -> void { uciok_done.set_value(); });
+    std::promise<void> readyok_done;
+    auto readyok_future = readyok_done.get_future();
+    handler.on_readyok([&readyok_done]() -> void { readyok_done.set_value(); });
+
+    REQUIRE(handler.start({}));
+    REQUIRE(handler.send_uci());
+    REQUIRE(id_name_future.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
+    CHECK(id_name_future.get() == "test_engine");
+    REQUIRE(id_author_future.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
+    CHECK(id_author_future.get() == "test_author");
+    REQUIRE(uciok_future.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
+    REQUIRE(readyok_future.wait_for(std::chrono::milliseconds(50)) == std::future_status::timeout);
+    REQUIRE(handler.send_isready());
+    REQUIRE(readyok_future.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
+    handler.stop();
+}
