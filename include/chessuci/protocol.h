@@ -108,6 +108,8 @@ struct Option {
     static auto type_from_string(const std::string &str) -> Type;
 };
 
+using TokenList = std::vector<std::string>;
+
 } // namespace chessuci
 
 #endif

@@ -75,7 +75,7 @@ TEST_CASE("EngineHandler.Callback.Custom", "[engine_handler]") {
 
     std::promise<int> perft;
     auto perft_future = perft.get_future();
-    handler.register_command("perft", [&perft](const UCIHandler::TokenList &tokens) -> void {
+    handler.register_command("perft", [&perft](const TokenList &tokens) -> void {
         if (tokens.size() == 2 && tokens[0] == "perft") {
             perft.set_value(std::stoi(tokens[1]));
         }
@@ -93,7 +93,7 @@ TEST_CASE("EngineHandler.Callback.Unknown", "[engine_handler]") {
 
     std::promise<std::string> unknown_command;
     auto unknown_command_future = unknown_command.get_future();
-    handler.on_unknown_command([&unknown_command](const UCIHandler::TokenList &tokens) -> void { unknown_command.set_value(tokens[0]); });
+    handler.on_unknown_command([&unknown_command](const TokenList &tokens) -> void { unknown_command.set_value(tokens[0]); });
 
     handler.start();
     CHECK(unknown_command_future.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
