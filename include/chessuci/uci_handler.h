@@ -14,11 +14,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "chessuci/protocol.h"
+
 namespace chessuci {
 
 class UCIHandler {
 public:
-    using TokenList = std::vector<std::string>;
     using CustomCommandCallback = std::function<void(const TokenList &)>;
     using UnknownCommandCallback = std::function<void(const TokenList &)>;
 
