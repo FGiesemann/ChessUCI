@@ -41,6 +41,8 @@ auto to_string(const position_command &command) -> std::string {
     return message;
 }
 
+const std::string position_command::startpos{"startpos"};
+
 auto to_string(const go_command &command) -> std::string {
     std::string message{"go"};
     add_move_list(message, command.searchmoves, "searchmoves");

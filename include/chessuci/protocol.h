@@ -30,6 +30,8 @@ struct setoption_command {
 struct position_command {
     std::string fen; // Could also be 'startpos'
     std::vector<UCIMove> moves;
+
+    static const std::string startpos;
 };
 
 auto to_string(const position_command &command) -> std::string;
