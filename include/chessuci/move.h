@@ -23,6 +23,11 @@ struct UCIMove {
     chesscore::Square to;                                              ///< The target square of the move.
     std::optional<chesscore::PieceType> promotion_piece{std::nullopt}; ///< Type of piece that the moving piece promotes to, if any.
 
+    UCIMove(const chesscore::Square &from, const chesscore::Square &to, const std::optional<chesscore::PieceType> &promotion_piece = std::nullopt)
+        : from{from}, to{to}, promotion_piece{promotion_piece} {}
+    explicit UCIMove(const chesscore::Move &move)
+        : from{move.from}, to{move.to}, promotion_piece{move.promoted.has_value() ? std::optional<chesscore::PieceType>{move.promoted.value().type} : std::nullopt} {}
+
     auto operator==(const UCIMove &rhs) const -> bool { return from == rhs.from && to == rhs.to && promotion_piece == rhs.promotion_piece; }
 };
 
