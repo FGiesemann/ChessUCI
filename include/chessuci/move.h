@@ -10,6 +10,7 @@
 #include <optional>
 
 #include <chesscore/move.h>
+#include <chesscore/position.h>
 
 namespace chessuci {
 
@@ -23,6 +24,7 @@ struct UCIMove {
     chesscore::Square to;                                              ///< The target square of the move.
     std::optional<chesscore::PieceType> promotion_piece{std::nullopt}; ///< Type of piece that the moving piece promotes to, if any.
 
+    UCIMove() = default;
     UCIMove(const chesscore::Square &from, const chesscore::Square &to, const std::optional<chesscore::PieceType> &promotion_piece = std::nullopt)
         : from{from}, to{to}, promotion_piece{promotion_piece} {}
     explicit UCIMove(const chesscore::Move &move)
@@ -30,6 +32,32 @@ struct UCIMove {
 
     auto operator==(const UCIMove &rhs) const -> bool { return from == rhs.from && to == rhs.to && promotion_piece == rhs.promotion_piece; }
 };
+
+/**
+ * \brief Convert an UCIMove to a chesscore::Move.
+ *
+ * An UCIMove does not contain all the information that a chesscore::Move
+ * carries. This function tries to find the chesscore::Move that is described by
+ * the UCIMove in the given position. Only legal moves can be converted.
+ * \param move The UCIMove to convert.
+ * \param position The position to which the move applies.
+ * \return The converted move, if it is legal.
+ */
+auto convert_move(const UCIMove &move, const chesscore::Position &position) -> std::optional<chesscore::Move>;
+
+/**
+ * \brief Convert a legal UCIMove to a chesscore::Move.
+ *
+ * Converts the UCIMove to a chesscore::Move without legality check, which
+ * should be faster than using convert_move().
+ * This conversion should only be used when the move is known to be legal. Some
+ * basic checks are made (e.g., move from an empty square), but pieces could be
+ * moved to invalid squares and leave their king in check.
+ * \param move The UCIMove to convert.
+ * \param position The position to which the move applies.
+ * \return The converted move.
+ */
+auto convert_legal_move(const UCIMove &move, const chesscore::Position &position) -> std::optional<chesscore::Move>;
 
 /**
  * \brief Convert a UCIMove to a string.
