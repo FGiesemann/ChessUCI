@@ -3,6 +3,7 @@ add_executable(chessuci_unittests
     src/engine_handler_parsing_test.cpp
     src/gui_handler_callback_test.cpp
     src/gui_handler_parsing_test.cpp
+    src/uci_move_conversion_test.cpp
     src/uci_move_matcher_test.cpp
     src/uci_move_parser_test.cpp
 

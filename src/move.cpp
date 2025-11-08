@@ -26,6 +26,44 @@ auto is_valid_promotion_piece(char piece) -> bool {
 }
 } // namespace
 
+auto convert_move(const UCIMove &move, const chesscore::Position &position) -> std::optional<chesscore::Move> {
+    const auto legal_moves = position.all_legal_moves();
+    const auto matches = match_move(move, legal_moves);
+    if (matches.size() == 1) {
+        return matches[0];
+    }
+    return std::nullopt;
+}
+
+auto convert_legal_move(const UCIMove &move, const chesscore::Position &position) -> std::optional<chesscore::Move> {
+    chesscore::Move result{};
+    const auto &board = position.board();
+    const auto piece = board.get_piece(move.from);
+    if (!piece.has_value()) {
+        return {};
+    }
+    result.from = move.from;
+    result.piece = piece.value();
+    result.to = move.to;
+    if (move.promotion_piece.has_value()) {
+        result.promoted = chesscore::Piece{.type = move.promotion_piece.value(), .color = position.side_to_move()};
+    }
+    const auto captured_piece = board.get_piece(move.to);
+    if (captured_piece.has_value()) {
+        result.captured = captured_piece.value();
+    }
+    if (result.piece.type == chesscore::PieceType::Pawn) {
+        if (move.from.file() != move.to.file() && !captured_piece.has_value()) {
+            result.capturing_en_passant = true;
+            result.captured = board.get_piece(chesscore::Square{move.to.file(), move.from.rank()});
+        }
+    }
+    result.halfmove_clock_before = position.halfmove_clock();
+    result.en_passant_target_before = position.en_passant_target();
+    result.castling_rights_before = position.castling_rights();
+    return result;
+}
+
 auto to_string(const UCIMove &move) -> std::string {
     std::string result{to_string(move.from)};
     result += to_string(move.to);
