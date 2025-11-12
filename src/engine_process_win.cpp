@@ -17,7 +17,7 @@ auto EngineProcessWin::utf8_to_wide(const std::string &utf8) -> std::wstring {
     if (size == 0) {
         return {};
     }
-    std::wstring result(size, 0);
+    std::wstring result(static_cast<std::wstring::size_type>(size), 0);
     MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), static_cast<int>(utf8.size()), result.data(), size);
 
     return result;
@@ -32,7 +32,7 @@ auto EngineProcessWin::wide_to_utf8(const std::wstring &wide) -> std::string {
     if (size == 0) {
         return {};
     }
-    std::string result(size, 0);
+    std::string result(static_cast<std::wstring::size_type>(size), 0);
     WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), static_cast<int>(wide.size()), result.data(), size, nullptr, nullptr);
 
     return result;
@@ -111,7 +111,7 @@ auto EngineProcessWin::terminate(int timeout_ms) -> bool {
 
     write_line("quit");
     DWORD exit_code{};
-    if (wait_for_process(timeout_ms, exit_code)) {
+    if (wait_for_process(static_cast<DWORD>(timeout_ms), exit_code)) {
         m_running = false;
         close_handles();
         return true;
@@ -146,7 +146,7 @@ auto EngineProcessWin::wait_for_exit(int timeout_ms) -> std::optional<int> {
     }
 
     DWORD exit_code{};
-    if (wait_for_process(timeout_ms, exit_code)) {
+    if (wait_for_process(static_cast<DWORD>(timeout_ms), exit_code)) {
         m_running = false;
         close_handles();
         return static_cast<int>(exit_code);
