@@ -8,7 +8,7 @@
 
 #include "chessuci/engine_process.h"
 
-#include <windows.h>
+#include <Windows.h>
 
 namespace chessuci {
 
