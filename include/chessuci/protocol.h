@@ -39,15 +39,15 @@ auto to_string(const position_command &command) -> std::string;
 struct go_command {
     std::vector<UCIMove> searchmoves;
     bool ponder = false;
-    std::optional<int> wtime;
-    std::optional<int> btime;
+    std::optional<std::int64_t> wtime;
+    std::optional<std::int64_t> btime;
     std::optional<int> winc;
     std::optional<int> binc;
     std::optional<int> movestogo;
-    std::optional<int> depth;
-    std::optional<int> nodes;
+    std::optional<std::uint64_t> depth;
+    std::optional<std::uint64_t> nodes;
     std::optional<int> mate;
-    std::optional<int> movetime;
+    std::optional<std::int64_t> movetime;
     bool infinite = false;
 };
 
