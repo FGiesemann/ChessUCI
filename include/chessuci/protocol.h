@@ -79,7 +79,7 @@ struct search_info {
     std::optional<int> depth;
     std::optional<int> seldepth;
     std::optional<int> time;
-    std::optional<int> nodes;
+    std::optional<std::uint64_t> nodes;
     std::vector<UCIMove> pv;
     std::optional<int> multipv;
     std::optional<score_info> score;
