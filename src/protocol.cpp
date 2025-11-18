@@ -61,6 +61,10 @@ auto to_string(const go_command &command) -> std::string {
     return message;
 }
 
+auto go_command::has_timing_control() const -> bool {
+    return wtime.has_value() || btime.has_value() || movetime.has_value() || infinite;
+}
+
 auto Option::to_uci_string() const -> std::string {
     std::ostringstream oss;
     oss << "option ";
