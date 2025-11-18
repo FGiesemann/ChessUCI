@@ -49,6 +49,8 @@ struct go_command {
     std::optional<int> mate;
     std::optional<std::int64_t> movetime;
     bool infinite = false;
+
+    auto has_timing_control() const -> bool;
 };
 
 auto to_string(const go_command &command) -> std::string;
