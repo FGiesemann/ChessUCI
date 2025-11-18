@@ -58,7 +58,8 @@ public:
     static auto parse_option_command(const TokenList &tokens) -> Option;
     static auto parse_score(const TokenList &tokens, size_t index) -> score_info;
 
-    static auto parse_int_param(const TokenList &tokens, size_t index, std::optional<int> &target) -> void;
+    template<typename T>
+    static auto parse_int_param(const TokenList &tokens, size_t index, std::optional<T> &target) -> void;
     static auto collect_string(const TokenList &tokens, size_t index) -> std::string;
 private:
     static constexpr int engine_terminate_timeout{3000};
