@@ -4,6 +4,7 @@
  * ************************************************************************** */
 
 #include "chessuci/gui_handler.h"
+#include "chessuci/string_conversion.h"
 
 namespace chessuci {
 
@@ -318,11 +319,11 @@ auto UCIGuiHandler::parse_option_command(const TokenList &tokens) -> Option {
     return option;
 }
 
-auto UCIGuiHandler::parse_int_param(const TokenList &tokens, size_t index, std::optional<int> &target) -> void {
+template<typename T>
+auto UCIGuiHandler::parse_int_param(const TokenList &tokens, size_t index, std::optional<T> &target) -> void {
     if (index + 1 < tokens.size()) {
-        try {
-            target = std::stoi(tokens[++index]);
-        } catch (...) {
+        target = str_to_inttype<T>(tokens[++index]);
+        if (!target.has_value()) {
             throw UCIError{"Invalid integer parameter"};
         }
     } else {

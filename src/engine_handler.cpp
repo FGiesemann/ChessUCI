@@ -4,6 +4,7 @@
  * ************************************************************************** */
 
 #include "chessuci/engine_handler.h"
+#include "chessuci/string_conversion.h"
 
 #include <algorithm>
 #include <ranges>
@@ -246,11 +247,11 @@ auto UCIEngineHandler::parse_position_command(const TokenList &tokens) -> positi
 auto UCIEngineHandler::parse_go_command(const TokenList &tokens) -> go_command {
     go_command command;
     for (std::size_t index = 1; index < tokens.size(); ++index) {
-        auto parse_int_param = [&](std::optional<int> &target) {
+        auto parse_int_param = [&](auto &target) {
             if (index + 1 < tokens.size()) {
-                try {
-                    target = std::stoi(tokens[++index]);
-                } catch (...) {
+                using TargetValueType = typename std::remove_reference_t<decltype(target)>::value_type;
+                target = str_to_inttype<TargetValueType>(tokens[++index]);
+                if (!target.has_value()) {
                     throw UCIError{"Invalid integer parameter"};
                 }
             } else {
