@@ -23,7 +23,7 @@ public:
     using ResponseFunction = std::function<std::vector<std::string>(const std::string &)>;
 
     EngineProcessMock() = default;
-    virtual ~EngineProcessMock() = default;
+    virtual ~EngineProcessMock() override = default;
 
     auto when_receives(const std::string &input, ResponseFunction response) -> void;
 
