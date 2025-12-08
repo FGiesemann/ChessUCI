@@ -80,7 +80,7 @@ struct line_info {
 struct search_info {
     std::optional<int> depth;
     std::optional<int> seldepth;
-    std::optional<int> time;
+    std::optional<std::int64_t> time;
     std::optional<std::uint64_t> nodes;
     std::vector<UCIMove> pv;
     std::optional<int> multipv;
