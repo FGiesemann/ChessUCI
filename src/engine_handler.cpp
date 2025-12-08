@@ -18,6 +18,9 @@ UCIEngineHandler::UCIEngineHandler(std::istream &input, std::ostream &output) : 
 
 UCIEngineHandler::~UCIEngineHandler() {
     stop();
+    if (m_thread.joinable()) {
+        m_thread.join();
+    }
 }
 
 auto UCIEngineHandler::start() -> void {
@@ -29,9 +32,6 @@ auto UCIEngineHandler::start() -> void {
 
 auto UCIEngineHandler::stop() -> void {
     m_running = false;
-    if (m_thread.joinable()) {
-        m_thread.join();
-    }
 }
 
 auto UCIEngineHandler::read_loop() -> void {
