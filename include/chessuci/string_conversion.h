@@ -21,7 +21,7 @@ auto str_to_inttype(std::string_view str) -> std::optional<T> {
 
     T value{};
     const char *first = str.data();
-    const char *last = &*str.end();
+    const char *last = str.data() + str.size();
     auto [ptr, ec] = std::from_chars(first, last, value);
 
     if (ec == std::errc()) {
