@@ -16,6 +16,7 @@ target_include_directories(chessuci_unittests
 target_compile_definitions(chessuci_unittests PRIVATE
     TEST_BINARY_DIR="${CMAKE_BINARY_DIR}/test/processes/test_binaries"
 )
+target_compile_options(chessuci_unittests PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/EHsc>)
 add_dependencies(chessuci_unittests
     test_echo
 )
