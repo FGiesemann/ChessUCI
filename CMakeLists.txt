@@ -43,6 +43,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
+target_compile_options(${PROJECT_NAME} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/EHsc>)
 find_package(chesscore REQUIRED COMPONENTS chesscore)
 target_link_libraries(${PROJECT_NAME} PUBLIC chesscore::chesscore)
 add_compiler_warnings(${PROJECT_NAME})
