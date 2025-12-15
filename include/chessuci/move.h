@@ -25,8 +25,8 @@ struct UCIMove {
     std::optional<chesscore::PieceType> promotion_piece{std::nullopt}; ///< Type of piece that the moving piece promotes to, if any.
 
     UCIMove() = default;
-    UCIMove(const chesscore::Square &from, const chesscore::Square &to, const std::optional<chesscore::PieceType> &promotion_piece = std::nullopt)
-        : from{from}, to{to}, promotion_piece{promotion_piece} {}
+    UCIMove(const chesscore::Square &from_sq, const chesscore::Square &to_sq, const std::optional<chesscore::PieceType> &prom_piece = std::nullopt)
+        : from{from_sq}, to{to_sq}, promotion_piece{prom_piece} {}
     explicit UCIMove(const chesscore::Move &move)
         : from{move.from}, to{move.to}, promotion_piece{move.promoted.has_value() ? std::optional<chesscore::PieceType>{move.promoted.value().type} : std::nullopt} {}
 
