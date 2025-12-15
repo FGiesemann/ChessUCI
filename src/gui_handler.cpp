@@ -52,6 +52,14 @@ auto UCIGuiHandler::send_debug(bool on) -> bool {
     return send_raw(on ? "debug on" : "debug off");
 }
 
+auto UCIGuiHandler::send_setoption(const setoption_command &command) -> bool {
+    if (command.value.has_value()) {
+        return send_raw(std::string{"setoption name "} + command.name + std::string{" value "} + command.value.value());
+    } else {
+        return send_raw(std::string{"setoption name "} + command.name);
+    }
+}
+
 auto UCIGuiHandler::send_isready() -> bool {
     return send_raw("isready");
 }
