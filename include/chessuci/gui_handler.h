@@ -40,6 +40,7 @@ public:
 
     auto send_uci() -> bool;
     auto send_debug(bool on) -> bool;
+    auto send_setoption(const setoption_command &command) -> bool;
     auto send_isready() -> bool;
     auto send_ucinewgame() -> bool;
     auto send_position(const position_command &command) -> bool;
