@@ -20,7 +20,8 @@ auto add_bool_flag(std::string &line, const std::string &name, bool flag) -> voi
 template<typename T>
 auto add_optional_value(std::string &line, const std::string &name, const std::optional<T> &value) -> void {
     if (value.has_value()) {
-        line += " " + name + " " + std::to_string(value.value());
+        using std::to_string;
+        line += " " + name + " " + to_string(value.value());
     }
 }
 
@@ -69,6 +70,46 @@ auto to_string(const go_command &command) -> std::string {
 
 auto go_command::has_timing_control() const -> bool {
     return wtime.has_value() || btime.has_value() || movetime.has_value() || infinite;
+}
+
+auto to_string(const search_info &info) -> std::string {
+    std::string message{"info"};
+    add_optional_value(message, "depth", info.depth);
+    add_optional_value(message, "seldepth", info.seldepth);
+    add_optional_value(message, "time", info.time);
+    add_optional_value(message, "nodes", info.nodes);
+    add_optional_value(message, "multipv", info.multipv);
+    add_optional_value(message, "score", info.score);
+    add_optional_value(message, "currmove", info.currmove);
+    add_optional_value(message, "currmovenumber", info.currmovenumber);
+    add_optional_value(message, "hashfull", info.hashfull);
+    add_optional_value(message, "nps", info.nps);
+    add_optional_value(message, "tbhits", info.tbhits);
+    add_optional_value(message, "sbhits", info.sbhits);
+    add_optional_value(message, "cpuload", info.cpuload);
+    if (!info.string.empty()) {
+        message += " string " + info.string;
+    }
+    add_move_list(message, info.pv, "pv");
+    add_move_list(message, info.refutation, "refutation");
+    add_optional_value(message, "currline", info.currline);
+    return message;
+}
+
+auto to_string(const score_info &score) -> std::string {
+    std::string message{"score"};
+    add_optional_value(message, "cp", score.cp);
+    add_optional_value(message, "mate", score.mate);
+    add_bool_flag(message, "lowerbound", score.lowerbound);
+    add_bool_flag(message, "upperbound", score.upperbound);
+    return message;
+}
+
+auto to_string(const line_info &info) -> std::string {
+    std::string message{"line"};
+    add_optional_value(message, "cpunr", info.cpunr);
+    add_move_list(message, info.line);
+    return message;
 }
 
 auto Option::to_uci_string() const -> std::string {
