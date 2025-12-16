@@ -72,10 +72,14 @@ struct score_info {
     bool upperbound;
 };
 
+auto to_string(const score_info &info) -> std::string;
+
 struct line_info {
     std::optional<int> cpunr;
     std::vector<UCIMove> line;
 };
+
+auto to_string(const line_info &info) -> std::string;
 
 struct search_info {
     std::optional<int> depth;
@@ -96,6 +100,8 @@ struct search_info {
     std::vector<UCIMove> refutation;
     std::optional<line_info> currline;
 };
+
+auto to_string(const search_info &info) -> std::string;
 
 struct Option {
     enum class Type { Check, Spin, Combo, Button, String };
