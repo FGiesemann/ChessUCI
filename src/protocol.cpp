@@ -36,8 +36,14 @@ auto add_move_list(std::string &line, const std::vector<UCIMove> &moves, const s
 } // namespace
 
 auto to_string(const position_command &command) -> std::string {
-    std::string message{"position " + command.fen};
-    add_move_list(message, command.moves);
+    std::string message{"position "};
+    if (command.fen != position_command::startpos) {
+        message += "fen " + command.fen;
+    }
+    if (!command.moves.empty()) {
+        message += " moves";
+        add_move_list(message, command.moves);
+    }
     return message;
 }
 
