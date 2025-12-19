@@ -68,8 +68,8 @@ struct bestmove_info {
 struct score_info {
     std::optional<int> cp;
     std::optional<int> mate;
-    bool lowerbound;
-    bool upperbound;
+    bool lowerbound{false};
+    bool upperbound{false};
 };
 
 auto to_string(const score_info &info) -> std::string;
