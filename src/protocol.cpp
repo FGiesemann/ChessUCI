@@ -96,12 +96,12 @@ auto to_string(const search_info &info) -> std::string {
     return message;
 }
 
-auto to_string(const score_info &score) -> std::string {
+auto to_string(const score_info &info) -> std::string {
     std::string message{"score"};
-    add_optional_value(message, "cp", score.cp);
-    add_optional_value(message, "mate", score.mate);
-    add_bool_flag(message, "lowerbound", score.lowerbound);
-    add_bool_flag(message, "upperbound", score.upperbound);
+    add_optional_value(message, "cp", info.cp);
+    add_optional_value(message, "mate", info.mate);
+    add_bool_flag(message, "lowerbound", info.lowerbound);
+    add_bool_flag(message, "upperbound", info.upperbound);
     return message;
 }
 
