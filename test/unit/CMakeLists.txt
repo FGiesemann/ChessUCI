@@ -29,6 +29,7 @@ if (WIN32)
 endif()
 
 add_compiler_warnings(chessuci_unittests)
+add_optimization_settings(chessuci_unittests)
 
 target_link_libraries(chessuci_unittests
     PRIVATE

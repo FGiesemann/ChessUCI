@@ -44,6 +44,7 @@ target_compile_options(chessuci_processhandling_tests
         "$<$<CXX_COMPILER_ID:MSVC>:/utf-8>"
 )
 target_compile_options(chessuci_processhandling_tests PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/EHsc>)
+add_optimization_settings(chessuci_processhandling_tests)
 
 add_dependencies(chessuci_processhandling_tests
     test_echo
