@@ -11,7 +11,7 @@ include(FetchContent)
 FetchContent_Declare(
     ChessBuild
     GIT_REPOSITORY https://github.com/FGiesemann/ChessBuild.git
-    GIT_TAG        v0.8.4
+    GIT_TAG        v0.8.5
 )
 FetchContent_MakeAvailable(ChessBuild)
 message(STATUS "CHESS BUILD MODULE DIR: ${CHESS_BUILD_MODULE_DIR}")
